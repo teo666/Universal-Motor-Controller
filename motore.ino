@@ -26,10 +26,10 @@
 
 //identifica il minimo intervallo di tempo fra le creste di salita del
 //segnale di tacho
-#define READ_UPPER_SPEED_LIMIT 70
+//#define READ_UPPER_SPEED_LIMIT 70
 //identifica il massimo intervallo di tempo fra le creste di salita del
 //segnale di tacho,
-#define READ_LOWER_SPEED_LIMIT 260
+//#define READ_LOWER_SPEED_LIMIT 260
 
 //minima velocita' desiderata, valori alti, abbassano la velocita
 //se 0 il motore riceve sempre il massimo della potenza
@@ -94,8 +94,11 @@ volatile uint8_t frequency_calc_added = 0;
 
 //il range dell' output va da 0 a 485, a 0 il motore gira a foo 485 val minimo
 volatile uint16_t output = 65535; //max value
-volatile uint16_t min_analog_value = 0;
-volatile uint16_t max_analog_value = 0;
+volatile uint16_t tacho_min_speed_value = 0;
+volatile uint16_t tacho_max_speed_value = 0;
+
+uint16_t output_min_speed_value = 0;
+uint16_t output_max_speed_value = 0;
 
 //FUNZIONI DI UTILITA'
 
@@ -233,19 +236,22 @@ void setup() {
     Serial.println(F("Turn potentiometer to increase speed and reach desire LOW speed, once done press and hold programming button ..."));
 
     delay_count = 1;
-    uint16_t tmp_lower_output;
-    uint16_t tmp_higher_output;
     while(1){
       
       prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
       output = map(prog_output, 1023, 0, 0, tick_per_phase);
       //Serial.println(tacho_tick_log);
       if(!delay_count){
-        tmp_lower_output = tacho_tick_log;
-        EEPROM.write(0,tmp_lower_output >> 8);
-        EEPROM.write(1,tmp_lower_output);
-        Serial.print(F("LOW speed set to: "));
-        Serial.print(tmp_lower_output);
+        tacho_min_speed_value = tacho_tick_log;
+        output_min_speed_value = output;
+        EEPROM.write(0,tacho_min_speed_value >> 8);
+        EEPROM.write(1,tacho_min_speed_value);
+        EEPROM.write(2,output_min_speed_value >> 8);
+        EEPROM.write(3,output_min_speed_value);
+        Serial.print(F("LOW speed tacho set to: "));
+        Serial.print(tacho_min_speed_value);
+        Serial.print(F(" LOW speed output set to: "));
+        Serial.print(output_min_speed_value);
         Serial.println(F(", saving ..."));
         break;
       }
@@ -262,18 +268,23 @@ void setup() {
       output = map(prog_output, 1023, 0, 0, tick_per_phase);
       //Serial.println(tacho_tick_log);
       if(!delay_count){
-        tmp_higher_output = tacho_tick_log;
-        if(tmp_higher_output > tmp_lower_output){
+        tacho_max_speed_value = tacho_tick_log;
+        output_max_speed_value = output;
+        if(tacho_max_speed_value > tacho_min_speed_value){
           Serial.println(F("The HIGH speed must be higher than LOW speed"));
           delay_count = 1;
           //se il bottone e' pigiato chiededre di rilasciarlo
           check_programming_button();
           Serial.println(F("try again"));
         } else {
-          EEPROM.write(2,tmp_higher_output >> 8);
-          EEPROM.write(3,tmp_higher_output);
-          Serial.print(F("HIGH speed set to: "));
-          Serial.print(tmp_higher_output);
+          EEPROM.write(4,tacho_max_speed_value >> 8);
+          EEPROM.write(5,tacho_max_speed_value);
+          EEPROM.write(6,output_max_speed_value >> 8);
+          EEPROM.write(7,output_max_speed_value);
+          Serial.print(F("HIGH speed tacho set to: "));
+          Serial.print(tacho_max_speed_value);
+          Serial.print(F(" HIGH speed output set to: "));
+          Serial.print(output_max_speed_value);
           Serial.println(F(", saving ..."));
           break;
         }
@@ -285,25 +296,52 @@ void setup() {
   }
   Serial.println(F("Operating mode"));
   Serial.println(F( "Reading paramters ..."));
-  min_analog_value = ( EEPROM.read(0) << 8 ) | EEPROM.read(1);
-  max_analog_value = ( EEPROM.read(2) << 8 ) | EEPROM.read(3);
-  Serial.print(F("LOW speed value: "));
-  Serial.print(min_analog_value);
-  Serial.print(F(", HIGH speed value: "));
-  Serial.println(max_analog_value);
+  tacho_min_speed_value = ( EEPROM.read(0) << 8 ) | EEPROM.read(1);
+  output_min_speed_value = ( EEPROM.read(2) << 8 ) | EEPROM.read(3);
+  tacho_max_speed_value = ( EEPROM.read(4) << 8 ) | EEPROM.read(5);
+  output_max_speed_value = ( EEPROM.read(6) << 8 ) | EEPROM.read(7);
+  Serial.print(F("LOW speed tacho value: "));
+  Serial.print(tacho_min_speed_value);
+  Serial.print(F(", HIGH speed tacho value: "));
+  Serial.println(tacho_max_speed_value);
+  Serial.print(F("LOW speed output value: "));
+  Serial.print(output_min_speed_value);
+  Serial.print(F(", HIGH speed output value: "));
+  Serial.println(output_max_speed_value);
+  output = output_min_speed_value;
 }
 
 volatile uint8_t _tacho_trig = 0;
+uint16_t tacho_map = 0;
+uint16_t pot_read = 0;
 
 void loop() {
+  //valore del potenziometro
+  pot_read = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
+  /*Serial.print("pot read: ");
+  Serial.print(pot_read);
+  Serial.print(" tacho read: ");
+  Serial.print(tacho_tick_log);
+  Serial.print(" output: ");
+  Serial.println(output);*/
+  if(pot_read < tacho_tick_log){
+    // motor speed is low
+    output--;
+  } else {
+    // motor speed is high
+    output++;
+  }
+
+  limit( &output, 200, output_min_speed_value );
   
-  output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 1023, 0, 0, tick_per_phase);
-  if(_tacho_trig){
+  /*if(_tacho_trig){
     TURN_ON_TACHO_LOG();
   } else {
     TURN_OFF_TACHO_LOG();
-  }
+  }*/
+
   //Serial.println(tacho_tick_log);
+  
 }
 
 //handler dell' interrupt associato al pin 1 di arduino
