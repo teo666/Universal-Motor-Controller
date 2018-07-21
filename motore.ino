@@ -22,7 +22,7 @@
 #define TRIAC_LOG 5
 
 //TACHO LOG per il debug del tacho
-#define TACHO_LOG 2
+#define TACHO_LOG 3
 
 //identifica il minimo intervallo di tempo fra le creste di salita del
 //segnale di tacho
@@ -56,7 +56,7 @@
 volatile uint16_t zcd_tick_log = 0;
 volatile uint16_t tacho_tick_log = 0;
 volatile uint16_t tick_after_zcd = 0;
-volatile uint8_t tick_after_tacho = 0;
+volatile uint16_t tick_after_tacho = 0;
 volatile uint8_t triac_state = 0;
 volatile uint8_t delay_count = 0;
 
@@ -77,7 +77,10 @@ variabile per distinguere tali valori
   punto un cui lo zcd e' effettivamente in fase e non si e' presentato il disturbo
 */
 volatile uint8_t zcd_error_correction = 0;
-volatile uint8_t found_correct_phase = 0;
+volatile uint8_t found_correct_main_phase = 0;
+
+volatile uint8_t tacho_error_correction = 0;
+volatile uint8_t found_correct_tacho_phase = 0;
 
 
 /*
@@ -125,7 +128,7 @@ uint16_t calculate_main_power_frequency(){
   return tick_sum / 255;
 }
 
-void chek_programming_button(){
+void check_programming_button(){
   //se il bottone e' pigiato chiededre di rilasciarlo
   if(!my_digital_read(PIND, PROG_PIN)){
     Serial.println("Release programming button, please");
@@ -147,6 +150,7 @@ void setup() {
   //TODO : abilitare il pulldown???
   cbi(DDRD,TACHO_INPUT);
   cbi(DDRD,ZCD_INPUT);
+  sbi(PORTD,TACHO_INPUT);
   //setta il pin di programmazione come ingresso e abilita la resistenza di pullup
   //permette di attaccare un push button senza ulteriori componenti
   //(ad essere pignoli servirebbe un condensatore in parallelo,
@@ -164,7 +168,7 @@ void setup() {
   EIMSK = 0b00000011; 
   
   //interruzioni sul rising e falling edge 01, 11 solo rising
-  EICRA = 0b00001101;
+  EICRA = 0b00001111;
   
   /* configurazione timer 2
    * per comee [ configurato il timer in una semionda a 50HZ esegue 625 interruzioni
@@ -211,7 +215,7 @@ void setup() {
     Serial.println(F("Programming mode"));
     
     //se il bottone e' pigiato chiededre di rilasciarlo
-    chek_programming_button();
+    check_programming_button();
     
     Serial.print(F("Number of tick per semi wave: "));
     Serial.println(tick_per_phase);
@@ -224,7 +228,7 @@ void setup() {
     }
     
     //se il bottone e' pigiato chiededre di rilasciarlo
-    chek_programming_button();
+    check_programming_button();
     
     Serial.println(F("Turn potentiometer to increase speed and reach desire LOW speed, once done press and hold programming button ..."));
 
@@ -235,8 +239,9 @@ void setup() {
       
       prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
       output = map(prog_output, 1023, 0, 0, tick_per_phase);
+      //Serial.println(tacho_tick_log);
       if(!delay_count){
-        tmp_lower_output = prog_output;
+        tmp_lower_output = tacho_tick_log;
         EEPROM.write(0,tmp_lower_output >> 8);
         EEPROM.write(1,tmp_lower_output);
         Serial.print(F("LOW speed set to: "));
@@ -247,7 +252,7 @@ void setup() {
     }
     
     //se il bottone e' pigiato chiededre di rilasciarlo
-    chek_programming_button();
+    check_programming_button();
     
     Serial.println(F("Turn potentiometer to increase speed and reach desire HIGH speed, once done press and hold programming button ..."));
 
@@ -255,13 +260,14 @@ void setup() {
     while(1){
       prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
       output = map(prog_output, 1023, 0, 0, tick_per_phase);
+      //Serial.println(tacho_tick_log);
       if(!delay_count){
-        tmp_higher_output = prog_output;
-        if(tmp_higher_output < tmp_lower_output){
+        tmp_higher_output = tacho_tick_log;
+        if(tmp_higher_output > tmp_lower_output){
           Serial.println(F("The HIGH speed must be higher than LOW speed"));
           delay_count = 1;
           //se il bottone e' pigiato chiededre di rilasciarlo
-          chek_programming_button();
+          check_programming_button();
           Serial.println(F("try again"));
         } else {
           EEPROM.write(2,tmp_higher_output >> 8);
@@ -287,8 +293,17 @@ void setup() {
   Serial.println(max_analog_value);
 }
 
+volatile uint8_t _tacho_trig = 0;
+
 void loop() {
-  output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 1023, 0, 0, tick_per_phase);  
+  
+  output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 1023, 0, 0, tick_per_phase);
+  if(_tacho_trig){
+    TURN_ON_TACHO_LOG();
+  } else {
+    TURN_OFF_TACHO_LOG();
+  }
+  //Serial.println(tacho_tick_log);
 }
 
 //handler dell' interrupt associato al pin 1 di arduino
@@ -296,7 +311,7 @@ void loop() {
 //all'uscita del circuito di ZCD
 ISR(INT0_vect) {
   zcd_error_correction = 0;
-  found_correct_phase = 0;
+  found_correct_main_phase = 0;
   //lancia una lettura del valore analogico
   ANALOG_READ();
 }
@@ -304,18 +319,21 @@ ISR(INT0_vect) {
 //handler dell' interrupt associato al pin 2 di arduino
 //utilizzato per il rilevamento del tacogeneratore
 ISR(INT1_vect) {
-  tick_after_tacho = 0;
+  tacho_error_correction = 0;
+  found_correct_tacho_phase = 0;
 }
 
 //interrupt associato al timer, all'interno di una semionda della rete
 //effettua dei controlli periodici, quali l'incremento del contatore
 ISR(TIMER2_OVF_vect) {
-
+  //
+  // zcd
+  //
   if (my_digital_read(PIND,ZCD_INPUT)) {
     zcd_error_correction++;
   }
   
-  if (zcd_error_correction > 10 && !found_correct_phase) {
+  if (zcd_error_correction > 10 && !found_correct_main_phase) {
     zcd_tick_log = tick_after_zcd;
     frequency_calc_added = 1;
     if(!my_digital_read(PIND, PROG_PIN)){
@@ -325,9 +343,22 @@ ISR(TIMER2_OVF_vect) {
     //spegni il triac
     TURN_OFF_TRIAC();
     triac_state = 0;
-    found_correct_phase = 1;
+    found_correct_main_phase = 1;
+  }
+  //
+  // tacho
+  //
+  if (my_digital_read(PIND,TACHO_INPUT)) {
+    tacho_error_correction++;
   }
   
+  if (tacho_error_correction > 15 && !found_correct_tacho_phase) {
+    tacho_tick_log = tick_after_tacho;
+    tick_after_tacho = 0;
+    found_correct_tacho_phase = 1;
+    _tacho_trig = !_tacho_trig;
+  }
+  //////////////////////////////////////
   tick_after_zcd++;
   tick_after_tacho++;
 
