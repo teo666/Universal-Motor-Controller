@@ -316,31 +316,38 @@ uint16_t tacho_map = 0;
 uint16_t pot_read = 0;
 
 void loop() {
-  //valore del potenziometro
   pot_read = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
-  /*Serial.print("pot read: ");
-  Serial.print(pot_read);
-  Serial.print(" tacho read: ");
-  Serial.print(tacho_tick_log);
-  Serial.print(" output: ");
-  Serial.println(output);*/
-  if(pot_read < tacho_tick_log){
-    // motor speed is low
-    output--;
-  } else {
-    // motor speed is high
-    output++;
-  }
-
-  limit( &output, 200, output_min_speed_value );
   
-  /*if(_tacho_trig){
-    TURN_ON_TACHO_LOG();
+  if(my_digital_read(PIND, PROG_PIN)){
+   
+    //valore del potenziometro
+    
+    /*Serial.print("pot read: ");
+    Serial.print(pot_read);
+    Serial.print(" tacho read: ");
+    Serial.print(tacho_tick_log);
+    Serial.print(" output: ");
+    Serial.println(output);*/
+    if(pot_read < tacho_tick_log){
+      // motor speed is low
+      output--;
+    } else {
+      // motor speed is high
+      output++;
+    }
+  
+    limit( &output, 200, output_min_speed_value );
   } else {
-    TURN_OFF_TACHO_LOG();
-  }*/
-
-  //Serial.println(tacho_tick_log);
+  
+    //modalita' manuale
+    Serial.print(pot_read);
+    Serial.print(" ");
+    Serial.print(tacho_tick_log);
+    Serial.print(" ");
+    Serial.println(output);
+    
+    output = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tick_per_phase, 0);
+  }
   
 }
 
