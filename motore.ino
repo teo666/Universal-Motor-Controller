@@ -1,4 +1,6 @@
+#include <PID_v1.h>
 #include <EEPROM.h>
+
 
 //registro per l'IO B (PORTD)
 //pin per controllare il triac (13 su Arduino UNO)
@@ -100,6 +102,11 @@ volatile uint16_t tacho_max_speed_value = 0;
 uint16_t output_min_speed_value = 0;
 uint16_t output_max_speed_value = 0;
 
+//variabili del pid
+
+double Setpoint, Input, Output;
+double Kp=1.2, Ki=20, Kd=0.1;
+PID *motor_PID;
 //FUNZIONI DI UTILITA'
 
 uint8_t my_digital_read(uint8_t port_reg, uint8_t bit)
@@ -193,7 +200,7 @@ void setup() {
   //TCCR0B = 0b00000001;
 
    
-  TIMSK0 = 0b00000000;
+  //TIMSK0 = 0b00000000;
 
   //settaggio della lettura analogica
   //setto il voltaggio di riferimento del convertitore alla tensione di alimentazione
@@ -309,43 +316,26 @@ void setup() {
   Serial.print(F(", HIGH speed output value: "));
   Serial.println(output_max_speed_value);
   output = output_min_speed_value;
+  Output = output;
+  motor_PID = new PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+  motor_PID->SetOutputLimits(0,output_min_speed_value);
+  motor_PID->SetMode(AUTOMATIC);
+  motor_PID->SetSampleTime(10);
+  Serial.end();
 }
 
 volatile uint8_t _tacho_trig = 0;
-uint16_t tacho_map = 0;
-uint16_t pot_read = 0;
 
 void loop() {
-  pot_read = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
+  //valore del potenziometro
+  Setpoint = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
   
   if(my_digital_read(PIND, PROG_PIN)){
-   
-    //valore del potenziometro
+    Input = tacho_tick_log;
+    motor_PID->Compute();
+    output = Output;
     
-    /*Serial.print("pot read: ");
-    Serial.print(pot_read);
-    Serial.print(" tacho read: ");
-    Serial.print(tacho_tick_log);
-    Serial.print(" output: ");
-    Serial.println(output);*/
-    if(pot_read < tacho_tick_log){
-      // motor speed is low
-      output--;
-    } else {
-      // motor speed is high
-      output++;
-    }
-  
-    limit( &output, 200, output_min_speed_value );
   } else {
-  
-    //modalita' manuale
-    Serial.print(pot_read);
-    Serial.print(" ");
-    Serial.print(tacho_tick_log);
-    Serial.print(" ");
-    Serial.println(output);
-    
     output = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tick_per_phase, 0);
   }
   
