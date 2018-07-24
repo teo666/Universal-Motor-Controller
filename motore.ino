@@ -106,6 +106,9 @@ uint16_t output_max_speed_value = 0;
 
 double Setpoint, Input, Output;
 double Kp=1.2, Ki=20, Kd=0.1;
+
+String serial_read;
+
 PID *motor_PID;
 //FUNZIONI DI UTILITA'
 
@@ -321,7 +324,7 @@ void setup() {
   motor_PID->SetOutputLimits(0,output_min_speed_value);
   motor_PID->SetMode(AUTOMATIC);
   motor_PID->SetSampleTime(10);
-  Serial.end();
+  //Serial.end();
 }
 
 volatile uint8_t _tacho_trig = 0;
@@ -334,6 +337,30 @@ void loop() {
     Input = tacho_tick_log;
     motor_PID->Compute();
     output = Output;
+    if(Serial.available()){
+      serial_read = Serial.readString();
+      String K = serial_read.substring(0,2);
+      
+      if (K.equals("kp")) {
+        Kp = serial_read.substring(2).toFloat();
+      } else if(K.equals("ki")){
+        Ki = serial_read.substring(2).toFloat();
+      } else if(K.equals("kd")){
+        Kd = serial_read.substring(2).toFloat();
+      }
+      motor_PID->SetTunings(Kp,Ki,Kd);
+      Serial.print("Kp: ");
+      Serial.print(Kp);
+      Serial.print(" Ki: ");
+      Serial.print(Ki);
+      Serial.print(" Kd:");
+      Serial.println(Kd);
+    }
+    /*Serial.print(Setpoint);
+    Serial.print(" ");
+    Serial.print(Input);
+    Serial.print(" ");
+    Serial.println(Output);*/
     
   } else {
     output = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tick_per_phase, 0);
