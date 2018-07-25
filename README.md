@@ -31,5 +31,65 @@ This signal is connected to a special pin of the Atmega that is able to recogniz
 
 (For a more comprensive and detailed guide about triac working principle read https://en.wikipedia.org/wiki/Thyristor and https://en.wikipedia.org/wiki/TRIAC)
 
-The above simple mechanism is enough to drive motors and it allows to change their speed with a potentiometer, for example we could read an analog value and map it along the time interval  punctuated by two rising edge coming from ZCD circuit, and switch triac in relation to that value. The figure below illustrate that mechanism
+The above simple mechanism is enough to drive motors and it allows to change their speed with a potentiometer, for example we could read an analog value and map it along the time interval punctuated by two rising edge coming from ZCD circuit, and switch triac in relation to that value. The figure below illustrate that mechanism
+
+![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/pot.png)
+
+Suppose to have a potentiometer to adjust the motor power: if potentiometer is turned to left the motor power decrease otherwise it increase. To achive that we have to change the switching point of triac inside main power source semiperiod. In our case the potentiometer is connected to one of the avr analog input pin and readed value from potentiometer is mapped into a value between 0 and 999, and assume that we divide the semiperiord in 999 slice with the same width going from 0 to 999.
+
+Now, if the potentiometer read value is 0 we want the mimimun motor power so we have to leave triac turned off.
+If potentiometer get a value of 999 the desire power is maximum, we have to excite trigger immidiatly after the 0 volt point, or equivalentemente at 0th slice.
+For any other value of potentiometer we have to trigger triac at slice numbered as (999 - pot_value) where pot_value is the value readed from potentiometer.
+
+At this point the main question is: how divide semiperiods into equal slices to know when turn on triac?
+The response is: with timers.
+
+Basically timers are hardware device enclosed into many ICs (avrs too) that can be used to count time. Think about timer like an unsigned variable going from 0 to a max value, and its content is increased by one (or decreased by one, or set to zero) every time that something happen, the something that happens is the clock signal, eventually scaled by a constant. Hardware can be configured to execute some special code (exactly like interrup mechanism previously described) each time timer value reaches a special value, for example its maximum value.
+
+The Atmega-328p (like arduino) is usually clocked with a 16MHz crystal oscillator, suppose to scale the clock with a 128 factor and use that signal to feed a 8bit timer. With that configuration timer increase its value by one every 
+1 / (16e6 / 128) = 0.000008 seconds or 8 microseconds, and suppose to configure hardware to execute the special code (called Interrupt Service Routine or ISR) every time timer reach maximum value that in a 8bit configuration is 255, and the ISR increase the `tick_count` variable value by one starting from 0.
+
+After 256 * 8 = 2048 microseconds `tick_count` value is incresed to 1  
+After 4096 microsecond `tick_count` value is 2  
+After 6144 microsecond `tick_count` value is 3  
+After 8192 microsecond `tick_count` value is 4  
+...  
+After 999424 microseconds `tick_count` value is 488
+
+or equivalently, when `tick_count` is 488 approximately a seconds is passed, that is how Arduino libraries implements millis, micros and delay functions.
+
+The idea that we use is the same: increment a variable by one periodically inside the timer overflow ISR (executed when timer reaches its maximum value) and reset it when ZCD find a zero volt point... then reapeat.
+
+Go back to potentiometer example. Suppose to be immediatly after a 0 volt point and ZCD has reset our variable, and also use this condition to turn on triac.
+
+``` c++
+if( tick_count >= (999 - pot_value)){
+    turn_on_triac();
+}
+```
+- if potentiometer is set to maximum value (999) then (999 - pot_value) = 0, our variable is greater or equal to 0 and the triac is turned on
+- if potentiometer is set to minimum value (0) then (999 - pot_value) = 999, our variable is less than 999 and the triac remains off
+- likewise intermediate values
+
+when next 0 volt poin occur, ZCD interrupt is executed, the `tick_count` variable is reset, and the process is repeated.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
