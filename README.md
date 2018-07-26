@@ -73,6 +73,10 @@ if( tick_count >= (999 - pot_value)){
 
 when next 0 volt poin occur, ZCD interrupt is executed, the `tick_count` variable is reset, and the process is repeated.
 
+At this point we have a mixture of software and hardware that is commoly called *dimmer*, a device that can change power given to a load turning a potentiometer, those kind of devices are usually used to change halogen lamps brightness, the next step is feedback circuit integration.
+
+
+
 
 
 
