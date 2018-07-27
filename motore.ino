@@ -337,7 +337,7 @@ void loop() {
     Input = tacho_tick_log;
     motor_PID->Compute();
     output = Output;
-    if(Serial.available()){
+    if(Serial.available() > 0){
       serial_read = Serial.readString();
       String K = serial_read.substring(0,2);
       
