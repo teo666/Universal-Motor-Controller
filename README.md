@@ -93,6 +93,7 @@ At this point IC has all needed parameter for controlling power motor, and for d
 
 
 # Hardware
+DISCLAIMER: I am not a electrical engineer and all these circuits were taken on web and put together with a limited knowledge of them. If you have suggest to improve them and UMC you are welcome.
 
 Below are reported the schematic circuits used in UMC
 ### Zero crossing detector circuit
@@ -105,11 +106,13 @@ note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with eq
 
 ![alt text](./doc/img/power_eagle.png)
 
-note: all resisor are 1/4 watt except R8 that is 1 watt, C3 must have appropriate galvanic isolation over
+note: all resisor are 1/4 watt except R8 that is 1 watt, C3 must have appropriate galvanic isolation, for T2 I used a BTB16 couse BT138 gave me some problem.  
 
 ### Feedback circuit
 
 ![alt text](./doc/img/tacho_eagle.png)
+
+note: note: all resisor are 1/4 watt, Vcc is 9 volts, IC1 can be replaced with another opamp
 
 
 
