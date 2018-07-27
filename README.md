@@ -1,10 +1,10 @@
-# What Universal-Motor-Driver is
+# What Universal-Motor-Controller is
 
-Universal-Motor-Driver (UMD) is an Arduino based software and hardware intended to drive universal brushed motor, like many circuit based on TDA1085.
+Universal-Motor-Driver (UMC) is an Arduino based software and hardware intended to drive universal brushed motor, like many circuit based on TDA1085.
 
 # Main components
 
-UMD consist of two parts:
+UMC consist of two parts:
 - software: a C/C++ code running on Atmel Atmega-328p (Arduino Uno and compatibles boards)
 - hardware: divided in three parts
     - zero crossing detector circuit (zcd), used for synchronize Arduino on main power
@@ -13,7 +13,7 @@ UMD consist of two parts:
 
 # Working principle
 
-Image below shows UMD's working diagram
+Image below shows UMC's working diagram
 
 ![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/working_block.png)
 
@@ -75,6 +75,21 @@ when next 0 volt poin occur, ZCD interrupt is executed, the `tick_count` variabl
 
 At this point we have a mixture of software and hardware that is commoly called *dimmer*, a device that can change power given to a load turning a potentiometer, those kind of devices are usually used to change halogen lamps brightness, the next step is feedback circuit integration.
 
+The feedback circuit allow system to react to load changes and increase motor power to avoid slowdowns. The feedback circuit receive a signal coming from the tachogenerator of the motor, make some process on it and send it to IC.
+The tachogenerator signal is commonly an AC sine wave signal that increase its frequency and voltage as the speed increases, so it is possible use both frequency or voltage or event both together to analyze the speed of the motor, in UMC frequency is used.
+The tacho AC signal is converted to an AC square wave signal and then only the positive component is took, giving to IC a DC square wave signal. The figure below show the tacho processing signal
+
+![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/tacho.png)
+
+Once IC receive the feedback signal it has to get its frequency to know the actual speed motor and change its power consequently. To do that UMC use the same tecnique used for ZCD: interrupt mechanism.
+
+Each time feedback signal goes from low to high (rising edge) IC's hardware generates an interrupt, the normal code execution is paused, the associated ISR is executed.
+Previously we talk about measuring signal frequency, in truth we do not need know the exact frequency instead just a value, related to frequency, on wich make a comparison.
+At this point is relatively simple to get an evaluation of feedback signal frequency. Do you remember the use of timer for periodically check if triac has to be turned on? Ok, we use the same routine for increase a counter associated to feedback signal and we will reset that value in ISR associated to feedback rising edge event. In that manner we have a value related to frequency: The higher the frequency (motor speed) the lower is the couter.
+
+At this point IC has all needed parameter for controlling power motor, and for do that we use a PID controller, you can read more about PID controller on [Wikipedia](https://en.wikipedia.org/wiki/PID_controller). About 
+[used Library](https://playground.arduino.cc/Code/PIDLibrary) and 
+[detailed library explanation](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/)
 
 
 
