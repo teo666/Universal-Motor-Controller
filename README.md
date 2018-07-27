@@ -15,7 +15,7 @@ UMC consist of two parts:
 
 Image below shows UMC's working diagram
 
-![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/working_block.png)
+![alt text](./doc/img/working_block.png)
 
 - The main power is connected to zero crossing detector circuit that transform sine wave signal to a square wave signal and send it to IC, main power source is conneted to motor power switching circuit
 - IC is an Atmega-328p
@@ -33,7 +33,7 @@ This signal is connected to a special pin of the Atmega that is able to recogniz
 
 The above simple mechanism is enough to drive motors and it allows to change their speed with a potentiometer, for example we could read an analog value and map it along the time interval punctuated by two rising edge coming from ZCD circuit, and switch triac in relation to that value. The figure below illustrate that mechanism
 
-![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/pot.png)
+![alt text](./doc/img/pot.png)
 
 Suppose to have a potentiometer to adjust the motor power: if potentiometer is turned to left the motor power decrease otherwise it increase. To achive that we have to change the switching point of triac inside main power source semiperiod. In our case the potentiometer is connected to one of the avr analog input pin and readed value from potentiometer is mapped into a value between 0 and 999, and assume that we divide the semiperiord in 999 slice with the same width going from 0 to 999.
 
@@ -79,7 +79,7 @@ The feedback circuit allow system to react to load changes and increase motor po
 The tachogenerator signal is commonly an AC sine wave signal that increase its frequency and voltage as the speed increases, so it is possible use both frequency or voltage or event both together to analyze the speed of the motor, in UMC frequency is used.
 The tacho AC signal is converted to an AC square wave signal and then only the positive component is took, giving to IC a DC square wave signal. The figure below show the tacho processing signal
 
-![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/tacho.png)
+![alt text](./doc/img/tacho.png)
 
 Once IC receive the feedback signal it has to get its frequency to know the actual speed motor and change its power consequently. To do that UMC use the same tecnique used for ZCD: interrupt mechanism.
 
@@ -95,17 +95,17 @@ At this point IC has all needed parameter for controlling power motor, and for d
 # Hardware
 
 Below are reported the schematic circuits used in UMC
-### Zero crossing fdetector circuit
+### Zero crossing detector circuit
 
 ![alt text](./doc/img/zcd_eagle.png)
 
 ### Motor power circuit
 
-![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/power_eagle.png)
+![alt text](./doc/img/power_eagle.png)
 
 ### Feedback circuit
 
-![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/tacho_eagle.png)
+![alt text](./doc/img/tacho_eagle.png)
 
 
 
