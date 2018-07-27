@@ -106,11 +106,11 @@ note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with eq
 
 ![alt text](./doc/img/power_eagle.png)
 
-note: all resisor are 1/4 watt except R8 that is 1 watt, C3 must have appropriate galvanic isolation, for T2 I used a BTB16 couse BT138 gave me some problem.  
+note: all resisor are 1/4 watt except R8 that is 1 watt (instead one 100 ohm resistor i recilced four 470 ohm resistor in parallel) , C3 must have appropriate galvanic isolation, for T2 I used a BTB16 couse BT138 gave me some problem.  
 
 ![alt text](./doc/img/zcd_power_board.jpg)
 
-note: zcd and motor poert circuits on same pcb
+note: zcd and motor power circuits on same pcb
 
 ![alt text](./doc/img/zcd_power_board_bottom.jpg)
 
