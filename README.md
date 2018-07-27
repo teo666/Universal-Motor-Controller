@@ -99,9 +99,13 @@ Below are reported the schematic circuits used in UMC
 
 ![alt text](./doc/img/zcd_eagle.png)
 
+note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with equivalent components.
+
 ### Motor power circuit
 
 ![alt text](./doc/img/power_eagle.png)
+
+note: all resisor are 1/4 watt except R8 that is 1 watt, C3 must have appropriate galvanic isolation over
 
 ### Feedback circuit
 
