@@ -1,6 +1,6 @@
 # What Universal-Motor-Controller is
 
-Universal-Motor-Driver (UMC) is an Arduino based software and hardware intended to drive universal brushed motor, like many circuit based on TDA1085.
+Universal-Motor-Controller (UMC) is an Arduino based software and hardware intended to drive universal brushed motor, like many circuit based on TDA1085.
 
 # Main components
 
@@ -100,13 +100,16 @@ Below are reported the schematic circuits used in UMC
 
 ![alt text](./doc/img/zcd_eagle.png)
 
-note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with equivalent components.
+note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with equivalent components.  
+PORTD,PIN2 is equivalent to pin 2 on Arduino-UNO board
 
 ### Motor power circuit
 
 ![alt text](./doc/img/power_eagle.png)
 
 note: all resisor are 1/4 watt except R8 that is 1 watt (instead one 100 ohm resistor i recilced four 470 ohm resistor in parallel) , C3 must have appropriate galvanic isolation, for T2 I used a BTB16 couse BT138 gave me some problem.  
+
+PORTD,PIN7 is equivalent to pin 7 on Arduino-UNO board
 
 ![alt text](./doc/img/zcd_power_board.jpg)
 
@@ -118,9 +121,13 @@ note: zcd and motor power circuits on same pcb
 
 ![alt text](./doc/img/tacho_eagle.png)
 
-note: note: all resisor are 1/4 watt, Vcc is 9 volts, IC1 can be replaced with another opamp
+note: note: all resisor are 1/4 watt, Vcc is 9 volts, IC1 can be replaced with another opamp  
 
-![alt text](./doc/img/tacho_board.jpg)
+PORTD,PIN3 is equivalent to pin 3 on Arduino-UNO board
+
+![alt text](./doc/img/tacho_board.jpg)  
+
+this board contains the potentiometer connector too and a push button connected to PORTD,PIN6 that is equivalent to pin 6 on Arduino-UNO board. We will talk about the push button later.
 
 All together
 
