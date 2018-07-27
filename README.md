@@ -108,11 +108,24 @@ note: VCC is 5 volt, all resistor are 1/4 watt,T1 and OK1 can be changed with eq
 
 note: all resisor are 1/4 watt except R8 that is 1 watt, C3 must have appropriate galvanic isolation, for T2 I used a BTB16 couse BT138 gave me some problem.  
 
+![alt text](./doc/img/zcd_power_board.png)
+
+note: zcd and motor poert circuits on same pcb
+
+![alt text](./doc/img/zcd_power_board_bottom.png)
+
 ### Feedback circuit
 
 ![alt text](./doc/img/tacho_eagle.png)
 
 note: note: all resisor are 1/4 watt, Vcc is 9 volts, IC1 can be replaced with another opamp
+
+![alt text](./doc/img/tacho_board.png)
+
+All together
+
+![alt text](./doc/img/assembled_board.png)
+
 
 
 
