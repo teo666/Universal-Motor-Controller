@@ -92,6 +92,20 @@ At this point IC has all needed parameter for controlling power motor, and for d
 [detailed library explanation](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/).
 
 
+# Hardware
+
+Below are reported the schematic circuits used in UMC
+### Zero crossing fdetector circuit
+
+![alt text](./doc/img/zcd_eagle.png)
+
+### Motor power circuit
+
+![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/power_eagle.png)
+
+### Feedback circuit
+
+![alt text](https://github.com/teo666/Universal-Motor-Controller/blob/master/doc/img/tacho_eagle.png)
 
 
 
