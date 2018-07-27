@@ -83,14 +83,13 @@ The tacho AC signal is converted to an AC square wave signal and then only the p
 
 Once IC receive the feedback signal it has to get its frequency to know the actual speed motor and change its power consequently. To do that UMC use the same tecnique used for ZCD: interrupt mechanism.
 
-Each time feedback signal goes from low to high (rising edge) IC's hardware generates an interrupt, the normal code execution is paused, the associated ISR is executed.
-Previously we talk about measuring signal frequency, in truth we do not need know the exact frequency instead just a value, related to frequency, on wich make a comparison.
-At this point is relatively simple to get an evaluation of feedback signal frequency. Do you remember the use of timer for periodically check if triac has to be turned on? Ok, we use the same routine for increase a counter associated to feedback signal and we will reset that value in ISR associated to feedback rising edge event. In that manner we have a value related to frequency: The higher the frequency (motor speed) the lower is the couter.
+Each time feedback signal goes from low to high (rising edge) IC's hardware generates an interrupt, the normal code execution is paused and associated ISR is executed.  
+Previously we talk about measuring signal frequency, in truth we do not need know the exact frequency, instead just a value related to frequency, on wich make a comparison.  
+At this point is relatively simple to get an evaluation of feedback signal frequency. Do you remember the use of timer for periodically check if triac has to be turned on? Ok, we use the same routine for increase a counter associated to feedback signal and we will reset that value in ISR associated to feedback rising edge event. In that manner we have a value related to frequency: the higher the frequency (motor speed) the lower is the couter.
 
-At this point IC has all needed parameter for controlling power motor, and for do that we use a PID controller, you can read more about PID controller on [Wikipedia](https://en.wikipedia.org/wiki/PID_controller). About 
-[used Library](https://playground.arduino.cc/Code/PIDLibrary) and 
-[detailed library explanation](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/)
-
+At this point IC has all needed parameter for controlling power motor, and for do that we use a PID controller, you can read more about PID controller on [Wikipedia](https://en.wikipedia.org/wiki/PID_controller), about 
+[used library](https://playground.arduino.cc/Code/PIDLibrary) and 
+[detailed library explanation](http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/).
 
 
 
