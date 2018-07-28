@@ -134,21 +134,6 @@ All together
 ![alt text](./doc/img/assembled_board.jpg)
 
 
+### Demo video
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+This [video](https://youtu.be/NKULTa6kquY) is a demonstration about UMC capabilities
