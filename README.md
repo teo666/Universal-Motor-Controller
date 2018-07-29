@@ -145,7 +145,7 @@ In some application we could need maximum motor speed around 2000 rmp and in oth
 At the moment it is possible limit the speed only during avr's boot process using the *programming button*.
 Programming Button is a push button that if pressed connect PORTD,PIN6 (pin 6 of Arduino Uno) to ground, and allow us to set limit speed values (low and high), these values are stored in avr's EEPROM so they are accessible at the next restart, whitout needs to set up them every time.
 
-CAUTION: programming button is used to switch from automatic to manual mode too. Manual mode allow to disable the feedback circuit and use UMC as a simple dimmer. Suppose to have upper speed limit set to 1000 rpm and runnign motor with this speed, so with potentiometer at maximum. If you press programming button in this condition the motor will receice all possible power and its speed will increase with possible motor or equipment damage.
+**CAUTION: programming button is used to switch from automatic to manual mode too. Manual mode allow to disable the feedback circuit and use UMC as a simple dimmer. Suppose to have upper speed limit set to 1000 rpm and runnign motor with this speed, so with potentiometer at maximum. If you press programming button in this condition the motor will receice all possible power and its speed will increase with possible motor or equipment damage.**
 
 ### Usage
 
