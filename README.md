@@ -137,3 +137,32 @@ All together
 ### Demo video
 
 This [video](https://youtu.be/NKULTa6kquY) is a demonstration about UMC capabilities
+
+# Speed limiter
+
+UMC comes with a spftearec based speed limiter. Speed limiter use the feedback signal to to achive this goal. Speed limiter is usefull because it allow to map all potentiometer turning range inside the desired motor speed limits.  
+In some application we could need maximum motor speed around 2000 rmp and in other 4000 rmp, but we want reach those speed when potentiometer is completely at the most, and leave hardware and software as they are, without needs of modifications.
+At the moment it is possible limit the speed only during avr's boot process using the *programming button*.
+Programming Button is a push button that if pressed connect PORTD,PIN6 (pin 6 of Arduino Uno) to ground, and allow us to set limit speed values (low and high), these values are stored in avr's EEPROM so they are accessible at the next restart, whitout needs to set up them every time.
+
+CAUTION: programming button is used to switch from automatic to manual mode too. Manual mode allow to disable the feedback circuit and use UMC as a simple dimmer. Suppose to have upper speed limit set to 1000 rpm and runnign motor with this speed, so with potentiometer at maximum. If you press programming button in this condition the motor will receice all possible power and its speed will increase with possible motor or equipment damage.
+
+### Usage
+
+- Connect Arduino to PC, on Arduino IDE open serial monitor (ensure all parameter are correct: serial port, board etc)
+- press and hold the *programming button*
+- reset the board keeping *programming button* pressed
+- read serial monitor keeping *programming button* pressed and follow printed instructions
+
+At the end of process if you turn potentiometer the speed motor is limeted inside selected range.
+
+# Known problems and Improvements
+
+This is a nightly UMC version, there are many things to improve
+
+- On low speed controller doesn't seems to work correctly (maybe due to bad PID parameters).
+- Lower speed limit can't be set to 0.
+- Improve feedback algorithm to be stable at different speeds.
+- Program lives as it is, there isn't an Object Oriented Programming model and integrations with other libraries are difficult due to time dependent application nature. There is a know problem related to this: PID library is a great tool but it does't allow asynchronous execution, maybe next UMC version will include your own implementation.
+- UMC doesn't allow connect multiple motor due low number of Atmega-328p interrupt pins. One is necessary for ZCD circuit the other for feedback circuit. I'm trying to remove this lack using a frequncy to analog converter that technically will allow drive up to eight motor. Should be possible monitor feedback signal without the need of interrupt pin checking it periodically inside timer's ISR, but I have not tested this method yet.
+- OOP usage is releted to the above two problems.
