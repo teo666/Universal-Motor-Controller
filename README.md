@@ -35,16 +35,16 @@ The above simple mechanism is enough to drive motors and it allows to change the
 
 ![alt text](./doc/img/pot.png)
 
-Suppose to have a potentiometer to adjust the motor power: if potentiometer is turned to left the motor power decrease otherwise it increase. To achive that we have to change the switching point of triac inside main power source semiperiod. In our case the potentiometer is connected to one of the avr analog input pin and readed value from potentiometer is mapped into a value between 0 and 999, and assume that we divide the semiperiord in 999 slice with the same width going from 0 to 999.
+Suppose to have a potentiometer to adjust the motor power: if potentiometer is turned to left the motor power decrease otherwise it increase. To achive that we have to change the switching point of triac inside main power source half period. In our case the potentiometer is connected to one of the avr analog input pin and readed value from potentiometer is mapped into a value between 0 and 999, and assume that we divide the semiperiord in 999 slice with the same width going from 0 to 999.
 
 Now, if the potentiometer read value is 0 we want the mimimun motor power so we have to leave triac turned off.
 If potentiometer get a value of 999 the desire power is maximum, we have to excite trigger immidiatly after the 0 volt point, or equivalentemente at 0th slice.
 For any other value of potentiometer we have to trigger triac at slice numbered as (999 - pot_value) where pot_value is the value readed from potentiometer.
 
-At this point the main question is: how divide semiperiods into equal slices to know when turn on triac?
+At this point the main question is: how divide half period into equal slices to know when turn on triac?
 The response is: with timers.
 
-Basically timers are hardware device enclosed into many ICs (avrs too) that can be used to count time. Think about timer like an unsigned variable going from 0 to a max value, and its content is increased by one (or decreased by one, or set to zero) every time that something happen, the something that happens is the clock signal, eventually scaled by a constant. Hardware can be configured to execute some special code (exactly like interrup mechanism previously described) each time timer value reaches a special value, for example its maximum value.
+Basically timers are hardware device enclosed into many ICs (avrs too) that can be used to count time. Think about timer like an unsigned variable going from 0 to a max value, and its content is increased by one (or decreased by one, or set to zero) every time that something happen, the something that happens is the clock signal, eventually scaled by a constant. Hardware can be configured to execute some special code (exactly like interrupt mechanism previously described) each time timer value reaches a special value, for example its maximum value.
 
 The Atmega-328p (like arduino) is usually clocked with a 16MHz crystal oscillator, suppose to scale the clock with a 128 factor and use that signal to feed a 8bit timer. With that configuration timer increase its value by one every 
 1 / (16e6 / 128) = 0.000008 seconds or 8 microseconds, and suppose to configure hardware to execute the special code (called Interrupt Service Routine or ISR) every time timer reach maximum value that in a 8bit configuration is 255, and the ISR increase the `tick_count` variable value by one starting from 0.
@@ -58,9 +58,9 @@ After 999424 microseconds `tick_count` value is 488
 
 or equivalently, when `tick_count` is 488 approximately a seconds is passed, that is how Arduino libraries implements millis, micros and delay functions.
 
-The idea that we use is the same: increment a variable by one periodically inside the timer overflow ISR (executed when timer reaches its maximum value) and reset it when ZCD find a zero volt point... then reapeat.
+The idea that we use is the same: increase a variable by one periodically inside the timer's overflow ISR (executed when timer reaches its maximum value) and reset it when ZCD find a zero volt point... then reapeat.
 
-Go back to potentiometer example. Suppose to be immediatly after a 0 volt point and ZCD has reset our variable, and also use this condition to turn on triac.
+Go back to potentiometer example. Suppose to be immediatly after a 0 volt point and ZCD has reset our variable, and also use following condition to turn on triac.
 
 ``` c++
 if( tick_count >= (999 - pot_value)){
@@ -75,16 +75,16 @@ when next 0 volt poin occur, ZCD interrupt is executed, the `tick_count` variabl
 
 At this point we have a mixture of software and hardware that is commoly called *dimmer*, a device that can change power given to a load turning a potentiometer, those kind of devices are usually used to change halogen lamps brightness, the next step is feedback circuit integration.
 
-The feedback circuit allow system to react to load changes and increase motor power to avoid slowdowns. The feedback circuit receive a signal coming from the tachogenerator of the motor, make some process on it and send it to IC.
-The tachogenerator signal is commonly an AC sine wave signal that increase its frequency and voltage as the speed increases, so it is possible use both frequency or voltage or event both together to analyze the speed of the motor, in UMC frequency is used.
-The tacho AC signal is converted to an AC square wave signal and then only the positive component is took, giving to IC a DC square wave signal. The figure below show the tacho processing signal
+The feedback circuit allow system to react to load changes and increase motor power to avoid slowdowns. The feedback circuit receives a signal coming from the tachogenerator of the motor, make some process on it and send it to IC.
+The tachogenerator signal is commonly an AC sine wave signal that increase its frequency and voltage as the speed increases, so it is possible use frequency or voltage or event both together to analyze the speed of the motor, in UMC frequency is used.
+The tacho AC signal is converted to an AC square wave signal and then only the positive component is taken, giving to IC a DC square wave signal. The figure below show the tacho processing signal
 
 ![alt text](./doc/img/tacho.png)
 
-Once IC receive the feedback signal it has to get its frequency to know the actual speed motor and change its power consequently. To do that UMC use the same tecnique used for ZCD: interrupt mechanism.
+Once IC receives the feedback signal it has to get its frequency to know the actual speed motor and change its power consequently. To do that UMC use the same tecnique used for ZCD: interrupt mechanism.
 
 Each time feedback signal goes from low to high (rising edge) IC's hardware generates an interrupt, the normal code execution is paused and associated ISR is executed.  
-Previously we talk about measuring signal frequency, in truth we do not need know the exact frequency, instead just a value related to frequency, on wich make a comparison.  
+Previously we have talked about measuring signal frequency, in truth we do not need know the exact frequency, instead just a value related to frequency on wich make a comparison.  
 At this point is relatively simple to get an evaluation of feedback signal frequency. Do you remember the use of timer for periodically check if triac has to be turned on? Ok, we use the same routine for increase a counter associated to feedback signal and we will reset that value in ISR associated to feedback rising edge event. In that manner we have a value related to frequency: the higher the frequency (motor speed) the lower is the couter.
 
 At this point IC has all needed parameter for controlling power motor, and for do that we use a PID controller, you can read more about PID controller on [Wikipedia](https://en.wikipedia.org/wiki/PID_controller), about 
