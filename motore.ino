@@ -302,7 +302,8 @@ void setup() {
     }
 
     Serial.println(F("Configuration completed, enjoy!"));
-
+    // impedisce la modalita' manuale quando si esce dal settaggio
+    check_programming_button();
   }
   Serial.println(F("Operating mode"));
   Serial.println(F( "Reading paramters ..."));
