@@ -162,8 +162,9 @@ This is a nightly UMC version, there are many things to improve
 
 - On low speed controller doesn't seems to work correctly (maybe due to bad PID parameters).
 - Lower speed limit can't be set to 0.
+- Slow start integration
 - Improve feedback algorithm to be stable at different speeds.
-- Program lives as it is, there isn't an Object Oriented Programming model and integrations with other libraries are difficult due to time dependent application nature. There is a know problem related to this: PID library is a great tool but it does't allow asynchronous execution, maybe next UMC version will include your own implementation.
+- Program lives as it is, there isn't an Object Oriented Programming model and integrations with other libraries are difficult due to time dependent application nature. There is a know problem related to this: PID library is a great tool but it does't allow asynchronous execution (but there is a workaorund that allow to reach the same result), maybe next UMC version will include your own PID implementation.
 - UMC doesn't allow connect multiple motor due low number of Atmega-328p interrupt pins. One is necessary for ZCD circuit the other for feedback circuit. I'm trying to remove this lack using a frequncy to analog converter that technically will allow drive up to eight motor. Should be possible monitor feedback signal without the need of interrupt pin checking it periodically inside timer's ISR, but I have not tested this method yet.
 - OOP usage is releted to the above two problems.
 
