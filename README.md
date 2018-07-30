@@ -167,5 +167,3 @@ This is a nightly UMC version, there are many things to improve
 - UMC doesn't allow connect multiple motor due low number of Atmega-328p interrupt pins. One is necessary for ZCD circuit the other for feedback circuit. I'm trying to remove this lack using a frequncy to analog converter that technically will allow drive up to eight motor. Should be possible monitor feedback signal without the need of interrupt pin checking it periodically inside timer's ISR, but I have not tested this method yet.
 - OOP usage is releted to the above two problems.
 
-
-aaaaa
