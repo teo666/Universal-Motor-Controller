@@ -1,4 +1,4 @@
-#include <PID_v1.h>
+#include <PID_ASYNC.h>
 #include <EEPROM.h>
 
 
@@ -105,8 +105,24 @@ uint16_t output_max_speed_value = 0;
 //variabili del pid
 
 double Setpoint, Input, Output;
-double Kp=1.2, Ki=20, Kd=0.1;
+//double Kp=1.2, Ki=20, Kd=0.1;
+//double Kp=2, Ki=00.0001, Kd=0;
+volatile uint8_t computeBarrier = 0;
 
+CoefficientPtr aaa = 0;
+CoefficientPtr (*searchfun)(CoefficientPtr,uint16_t*);
+
+Coefficient bbb;
+
+//funzione di ricerca dei parametri del pid
+CoefficientPtr search(CoefficientPtr carr, uint16_t* key){
+  bbb.Ki = 0.001;
+  bbb.Kp = 10;
+  bbb.Kd = 0;
+  return &bbb;
+  }
+
+/////
 String serial_read;
 
 PID *motor_PID;
@@ -321,10 +337,13 @@ void setup() {
   Serial.println(output_max_speed_value);
   output = output_min_speed_value;
   Output = output;
-  motor_PID = new PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+  //motor_PID = new PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, P_ON_E, (void *) &computeBarrier, (void *) &tacho_tick_log, DIRECT);
+
+  motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_E, aaa, (uint16_t *) &tacho_tick_log, &search, (uint8_t *) &computeBarrier, (uint16_t *) &tacho_tick_log, DIRECT);
+  //TODO quando sopra un certo livello azzerare il valore di output per rendere il rallentamento migliore
   motor_PID->SetOutputLimits(0,output_min_speed_value);
   motor_PID->SetMode(AUTOMATIC);
-  motor_PID->SetSampleTime(10);
+  //motor_PID->SetSampleTime(10);
   //Serial.end();
 }
 
@@ -335,6 +354,7 @@ void loop() {
   Setpoint = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
   
   if(my_digital_read(PIND, PROG_PIN)){
+    motor_PID->SetMode(AUTOMATIC);
     Input = tacho_tick_log;
     motor_PID->Compute();
     output = Output;
@@ -342,7 +362,7 @@ void loop() {
       serial_read = Serial.readString();
       String K = serial_read.substring(0,2);
       
-      if (K.equals("kp")) {
+      /*if (K.equals("kp")) {
         Kp = serial_read.substring(2).toFloat();
       } else if(K.equals("ki")){
         Ki = serial_read.substring(2).toFloat();
@@ -356,6 +376,7 @@ void loop() {
       Serial.print(Ki);
       Serial.print(" Kd:");
       Serial.println(Kd);
+      */
     }
     /*Serial.print(Setpoint);
     Serial.print(" ");
@@ -364,6 +385,7 @@ void loop() {
     Serial.println(Output);*/
     
   } else {
+    motor_PID->SetMode(MANUAL);
     output = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tick_per_phase, 0);
   }
   
@@ -417,6 +439,7 @@ ISR(TIMER2_OVF_vect) {
   
   if (tacho_error_correction > 15 && !found_correct_tacho_phase) {
     tacho_tick_log = tick_after_tacho;
+    computeBarrier = 1;
     tick_after_tacho = 0;
     found_correct_tacho_phase = 1;
     _tacho_trig = !_tacho_trig;
