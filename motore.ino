@@ -191,7 +191,7 @@ void setup() {
   EICRA = 0b00001111;
   
   /* configurazione timer 2
-   * quindi il valore della variabile output e' compreso fra 0 e 625
+   * quindi il valore della variabile putput e' compreso fra 0 e 625
    */
   
   TCCR2A = 0b00000011;
