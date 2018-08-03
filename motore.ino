@@ -62,8 +62,9 @@ volatile uint16_t tick_after_tacho = 0;
 volatile uint8_t triac_state = 0;
 
 //questa cosa del delay count mi serve per evitare di usare le funzioni di tempo di arduino
-//ma andrebbe rivista, fa affidamento sul fatto che nei loop la variabile viene testata piu' volte did qunto venga aggiornata
+//ma andrebbe rivista, fa affidamento sul fatto che nei loop la variabile viene testata piu' volte di qunto venga aggiornata
 volatile uint8_t delay_count = 0;
+volatile uint8_t delay_allow = 0;
 
 uint16_t tick_per_phase = 0;
 
@@ -447,6 +448,12 @@ ISR(TIMER2_OVF_vect) {
     frequency_calc_added = 1;
     if(!my_digital_read(PIND, PROG_PIN)){
       delay_count++;
+    } else {
+      delay_count = 1;
+      delay_allow = 0;
+    }
+    if(!delay_count){
+      delay_allow = 1;
     }
     tick_after_zcd = 0;
     //spegni il triac
