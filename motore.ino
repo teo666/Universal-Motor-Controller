@@ -271,11 +271,11 @@ void setup() {
   motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_E, &search, &tacho_tick_log, DIRECT);
   
   //TODO quando sopra un certo livello azzerare il valore di output per rendere il rallentamento migliore
-  motor_PID->SetOutputLimits(0,output_min_speed_value);
+  motor_PID->SetOutputLimits(0, output_min_speed_value );
   
   motor_PID->SetMode(AUTOMATIC);
 
-  Serial.end();
+  //Serial.end();
 }
 
 volatile uint8_t _tacho_trig = 0;
@@ -287,10 +287,12 @@ void loop() {
   if(my_digital_read(PIND, PROG_PIN)){
     motor_PID->SetMode(AUTOMATIC);
     Input = tacho_tick_log;
+    
     if(computeBarrier){
       motor_PID->Compute();
       computeBarrier = 0;
     }
+    
     output = Output;
     
   } else {
