@@ -1,3 +1,8 @@
+/**********************************************************************************************
+ * Arduino Universal Motor Controller - Version 1.0.1
+ * by teo Basili <basili.teo@gmail.com> https://github.com/teo666
+ **********************************************************************************************/
+
 #include "PID_ASYNC.h"
 #include <EEPROM.h>
 #include "pin_definition.h"
@@ -186,8 +191,7 @@ void setup() {
   EICRA = 0b00001111;
   
   /* configurazione timer 2
-   * per comee [ configurato il timer in una semionda a 50HZ esegue 625 interruzioni
-   * quindi il valore della variabile putput e' compreso fra 0 e 625
+   * quindi il valore della variabile output e' compreso fra 0 e 625
    */
   
   TCCR2A = 0b00000011;
@@ -223,7 +227,7 @@ void setup() {
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
-    Serial.print(F("Number of tick per semi wave: "));
+    Serial.print(F("Number of tick per half period: "));
     Serial.println(tick_per_phase);
     prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
     if(prog_output){
@@ -275,12 +279,14 @@ void setup() {
   
   motor_PID->SetMode(AUTOMATIC);
 
-  //Serial.end();
+  Serial.end();
+
 }
 
 volatile uint8_t _tacho_trig = 0;
 
 void loop() {
+
   //valore del potenziometro
   Setpoint = map( ((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023, tacho_min_speed_value, tacho_max_speed_value);
   
