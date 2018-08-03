@@ -292,42 +292,6 @@ void loop() {
       computeBarrier = 0;
     }
     output = Output;
-    /*if(Serial.available() > 0){
-      serial_read = Serial.readString();
-      String K = serial_read.substring(0,2);
-      
-      if (K.equals("kp")) {
-        Kp = serial_read.substring(2).toFloat();
-      } else if(K.equals("ki")){
-        Ki = serial_read.substring(2).toFloat();
-      } else if(K.equals("kd")){
-        Kd = serial_read.substring(2).toFloat();
-      }
-      motor_PID->SetTunings(Kp,Ki,Kd);
-      Serial.print("Kp: ");
-      Serial.print(Kp);
-      Serial.print(" Ki: ");
-      Serial.print(Ki);
-      Serial.print(" Kd:");
-      Serial.println(Kd);
-      
-    }*/
-/*
-      Serial.print(bbb.Kp);
-      Serial.print(" ");
-      Serial.print(bbb.Ki);
-      Serial.print(" ");
-      Serial.print(bbb.Kd);
-      Serial.print(" ");
-      
-      Serial.print(Setpoint);
-      Serial.print(" ");
-      Serial.print(Input);
-      Serial.print(" ");
-      Serial.print(Output);
-      Serial.print(" ");
-      Serial.println();
-*/
     
   } else {
     motor_PID->SetMode(MANUAL);
