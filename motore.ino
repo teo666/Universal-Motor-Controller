@@ -62,7 +62,6 @@ volatile uint16_t tick_after_tacho = 0;
 volatile uint8_t triac_state = 0;
 
 //questa cosa del delay count mi serve per evitare di usare le funzioni di tempo di arduino
-//ma andrebbe rivista, fa affidamento sul fatto che nei loop la variabile viene testata piu' volte di qunto venga aggiornata
 volatile uint8_t delay_count = 0;
 volatile uint8_t delay_allow = 0;
 
@@ -174,6 +173,64 @@ void check_programming_button(){
   }
 }
 
+typedef struct loop_ret {
+  uint16_t prog_output;
+  uint16_t output;
+} Loop_ret;
+
+void button_hold_request(void (*loop)(void *), void * loop_arg, void (* on_exit)(void *), void * exit_arg){
+
+  while(1){
+    loop(loop_arg);
+    if(delay_allow){
+      on_exit(exit_arg);
+      break;
+    }
+  }
+}
+
+void loop_read_fun(void * ret){
+  Loop_ret *tmp = (Loop_ret*) ret;
+  tmp->prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
+  tmp->output = map(tmp->prog_output, 1023, 0, 0, tick_per_phase);
+  output = tmp->output;
+}
+
+void save_low_speed_exit_fun(void *ret){
+  tacho_min_speed_value = tacho_tick_log;
+  output_min_speed_value = output;
+  EEPROM.write(0,tacho_min_speed_value >> 8);
+  EEPROM.write(1,tacho_min_speed_value);
+  EEPROM.write(2,output_min_speed_value >> 8);
+  EEPROM.write(3,output_min_speed_value);
+  Serial.print(F("LOW speed tacho set to: "));
+  Serial.print(tacho_min_speed_value);
+  Serial.print(F(" LOW speed output set to: "));
+  Serial.print(output_min_speed_value);
+  Serial.println(F(", saving ..."));
+}
+
+void save_high_speed_exit_fun(void *ret){
+  tacho_max_speed_value = tacho_tick_log;
+  output_max_speed_value = output;
+  if(tacho_max_speed_value > tacho_min_speed_value){
+    Serial.println(F("The HIGH speed must be higher than LOW speed"));
+    //se il bottone e' pigiato chiededre di rilasciarlo
+    check_programming_button();
+    Serial.println(F("try again"));
+  } else {
+    EEPROM.write(4,tacho_max_speed_value >> 8);
+    EEPROM.write(5,tacho_max_speed_value);
+    EEPROM.write(6,output_max_speed_value >> 8);
+    EEPROM.write(7,output_max_speed_value);
+    Serial.print(F("HIGH speed tacho set to: "));
+    Serial.print(tacho_max_speed_value);
+    Serial.print(F(" HIGH speed output set to: "));
+    Serial.print(output_max_speed_value);
+    Serial.println(F(", saving ..."));
+  }
+}
+
 void setup() {
   //setta i pin definiti sulla porta b come uscite
   sbi(DDRB,ZCD_LOG);
@@ -268,63 +325,18 @@ void setup() {
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
+    Loop_ret ret_t;
+    
     Serial.println(F("Turn potentiometer to increase speed and reach desire LOW speed, once done press and hold programming button ..."));
 
-    delay_count = 1;
-    while(1){
-      
-      prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
-      output = map(prog_output, 1023, 0, 0, tick_per_phase);
-      //Serial.println(tacho_tick_log);
-      if(!delay_count){
-        tacho_min_speed_value = tacho_tick_log;
-        output_min_speed_value = output;
-        EEPROM.write(0,tacho_min_speed_value >> 8);
-        EEPROM.write(1,tacho_min_speed_value);
-        EEPROM.write(2,output_min_speed_value >> 8);
-        EEPROM.write(3,output_min_speed_value);
-        Serial.print(F("LOW speed tacho set to: "));
-        Serial.print(tacho_min_speed_value);
-        Serial.print(F(" LOW speed output set to: "));
-        Serial.print(output_min_speed_value);
-        Serial.println(F(", saving ..."));
-        break;
-      }
-    }
-    
+    button_hold_request(&loop_read_fun, &ret_t, &save_low_speed_exit_fun, &ret_t);
+
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
     Serial.println(F("Turn potentiometer to increase speed and reach desire HIGH speed, once done press and hold programming button ..."));
 
-    delay_count = 1;
-    while(1){
-      prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
-      output = map(prog_output, 1023, 0, 0, tick_per_phase);
-      //Serial.println(tacho_tick_log);
-      if(!delay_count){
-        tacho_max_speed_value = tacho_tick_log;
-        output_max_speed_value = output;
-        if(tacho_max_speed_value > tacho_min_speed_value){
-          Serial.println(F("The HIGH speed must be higher than LOW speed"));
-          delay_count = 1;
-          //se il bottone e' pigiato chiededre di rilasciarlo
-          check_programming_button();
-          Serial.println(F("try again"));
-        } else {
-          EEPROM.write(4,tacho_max_speed_value >> 8);
-          EEPROM.write(5,tacho_max_speed_value);
-          EEPROM.write(6,output_max_speed_value >> 8);
-          EEPROM.write(7,output_max_speed_value);
-          Serial.print(F("HIGH speed tacho set to: "));
-          Serial.print(tacho_max_speed_value);
-          Serial.print(F(" HIGH speed output set to: "));
-          Serial.print(output_max_speed_value);
-          Serial.println(F(", saving ..."));
-          break;
-        }
-      }
-    }
+    button_hold_request(&loop_read_fun, &ret_t, &save_high_speed_exit_fun, &ret_t);
 
     Serial.println(F("Configuration completed, enjoy!"));
     // impedisce la modalita' manuale quando si esce dal settaggio
@@ -435,6 +447,7 @@ ISR(INT1_vect) {
 
 //interrupt associato al timer, all'interno di una semionda della rete
 //effettua dei controlli periodici, quali l'incremento del contatore
+//per poter far si che il bottone do programmazione funzioni c'e' bisogno dello zcd
 ISR(TIMER2_OVF_vect) {
   //
   // zcd
@@ -446,7 +459,7 @@ ISR(TIMER2_OVF_vect) {
   if (zcd_error_correction > 10 && !found_correct_main_phase) {
     zcd_tick_log = tick_after_zcd;
     frequency_calc_added = 1;
-    if(!my_digital_read(PIND, PROG_PIN)){
+    if(!my_digital_read(PIND, PROG_PIN) && !delay_allow){
       delay_count++;
     } else {
       delay_count = 1;
