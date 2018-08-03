@@ -173,30 +173,21 @@ void check_programming_button(){
   }
 }
 
-typedef struct loop_ret {
-  uint16_t prog_output;
-  uint16_t output;
-} Loop_ret;
-
-void button_hold_request(void (*loop)(void *), void * loop_arg, void (* on_exit)(void *), void * exit_arg){
-
+void button_hold_request(void (*loop)(), void (* on_exit)()){
   while(1){
-    loop(loop_arg);
+    loop();
     if(delay_allow){
-      on_exit(exit_arg);
+      on_exit();
       break;
     }
   }
 }
 
-void loop_read_fun(void * ret){
-  Loop_ret *tmp = (Loop_ret*) ret;
-  tmp->prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
-  tmp->output = map(tmp->prog_output, 1023, 0, 0, tick_per_phase);
-  output = tmp->output;
+void loop_read_fun(){
+  output = map((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG, 1023, 0, 0, tick_per_phase);
 }
 
-void save_low_speed_exit_fun(void *ret){
+void save_low_speed_exit_fun(){
   tacho_min_speed_value = tacho_tick_log;
   output_min_speed_value = output;
   EEPROM.write(0,tacho_min_speed_value >> 8);
@@ -210,7 +201,7 @@ void save_low_speed_exit_fun(void *ret){
   Serial.println(F(", saving ..."));
 }
 
-void save_high_speed_exit_fun(void *ret){
+void save_high_speed_exit_fun(){
   tacho_max_speed_value = tacho_tick_log;
   output_max_speed_value = output;
   if(tacho_max_speed_value > tacho_min_speed_value){
@@ -325,18 +316,16 @@ void setup() {
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
-    Loop_ret ret_t;
-    
     Serial.println(F("Turn potentiometer to increase speed and reach desire LOW speed, once done press and hold programming button ..."));
 
-    button_hold_request(&loop_read_fun, &ret_t, &save_low_speed_exit_fun, &ret_t);
+    button_hold_request(&loop_read_fun, &save_low_speed_exit_fun);
 
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
     Serial.println(F("Turn potentiometer to increase speed and reach desire HIGH speed, once done press and hold programming button ..."));
 
-    button_hold_request(&loop_read_fun, &ret_t, &save_high_speed_exit_fun, &ret_t);
+    button_hold_request(&loop_read_fun, &save_high_speed_exit_fun);
 
     Serial.println(F("Configuration completed, enjoy!"));
     // impedisce la modalita' manuale quando si esce dal settaggio
@@ -379,7 +368,6 @@ void loop() {
     motor_PID->SetMode(AUTOMATIC);
     Input = tacho_tick_log;
     if(computeBarrier){
-      // TOOD disabilitare le interruzioni??
       motor_PID->Compute();
       computeBarrier = 0;
     }
