@@ -272,7 +272,7 @@ void setup() {
   output = output_min_speed_value;
   Output = output;
 
-  motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_E, &search, &tacho_tick_log, DIRECT);
+  motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_M, &search, &tacho_tick_log, DIRECT);
   
   //TODO quando sopra un certo livello azzerare il valore di output per rendere il rallentamento migliore
   motor_PID->SetOutputLimits(0, output_min_speed_value );

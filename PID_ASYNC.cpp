@@ -27,9 +27,11 @@ PID::PID(double *Input, double *Output, double *Setpoint, uint8_t POn,
   timeInterval = TimeInterval;
   searchfunPtr = searchfun;
 
+  SetTunings(POn);
+
   PID::SetOutputLimits(0, 255);
 
-  PID::SetControllerDirection(ControllerDirection);
+ // PID::SetControllerDirection(ControllerDirection);
 }
 
 bool PID::Compute() {
@@ -77,14 +79,14 @@ bool PID::Compute() {
   return true;
 }
 
-void PID::SetTunings(double Kp, double Ki, double Kd, int POn) {
+void PID::SetTunings(/*double Kp, double Ki, double Kd,*/ int POn) {
 
-  SetTunings(Kp, Ki, Kd);
+  //SetTunings(Kp, Ki, Kd);
   pOn = POn;
   pOnE = POn == P_ON_E;
 }
 
-void PID::SetTunings(double Kp, double Ki, double Kd) {
+/*void PID::SetTunings(double Kp, double Ki, double Kd) {
   if (Kp < 0 || Ki < 0 || Kd < 0)
     return;
 
@@ -97,7 +99,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd) {
     ki = Ki;
     kd = Kd;
   }
-}
+}*/
 
 void PID::SetOutputLimits(double Min, double Max) {
   if (Min >= Max)
@@ -135,17 +137,17 @@ void PID::Initialize() {
     outputSum = outMin;
 }
 
-void PID::SetControllerDirection(int Direction) {
+/*void PID::SetControllerDirection(int Direction) {
   if (inAuto && Direction != controllerDirection) {
     kp = -kp;
     ki = -ki;
     kd = -kd;
   }
   controllerDirection = Direction;
-}
+}*/
 
-double PID::GetKp() { return kp; }
+/*double PID::GetKp() { return kp; }
 double PID::GetKi() { return ki; }
 double PID::GetKd() { return kd; }
 int PID::GetMode() { return inAuto ? AUTOMATIC : MANUAL; }
-int PID::GetDirection() { return controllerDirection; }
+int PID::GetDirection() { return controllerDirection; }*/
