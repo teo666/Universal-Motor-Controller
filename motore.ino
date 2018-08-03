@@ -60,6 +60,9 @@ volatile uint16_t tacho_tick_log = 0;
 volatile uint16_t tick_after_zcd = 0;
 volatile uint16_t tick_after_tacho = 0;
 volatile uint8_t triac_state = 0;
+
+//questa cosa del delay count mi serve per evitare di usare le funzioni di tempo di arduino
+//ma andrebbe rivista, fa affidamento sul fatto che nei loop la variabile viene testata piu' volte did qunto venga aggiornata
 volatile uint8_t delay_count = 0;
 
 uint16_t tick_per_phase = 0;
@@ -110,17 +113,21 @@ double Setpoint, Input, Output;
 volatile uint8_t computeBarrier = 0;
 
 CoefficientPtr aaa = 0;
-CoefficientPtr (*searchfun)(CoefficientPtr,uint16_t*);
-
 Coefficient bbb;
 
 //funzione di ricerca dei parametri del pid
-CoefficientPtr search(CoefficientPtr carr, uint16_t* key){
-  bbb.Ki = 0.001;
-  bbb.Kp = 10;
-  bbb.Kd = 0;
-  return &bbb;
+CoefficientPtr search(){
+  if(Input > 500){
+    bbb.Ki = 0.0001;
+    bbb.Kp = 1;
+    bbb.Kd = 0;
+  } else {
+    bbb.Ki = 0.001;
+    bbb.Kp = 10;
+    bbb.Kd = 1;
   }
+  return &bbb;
+}
 
 /////
 String serial_read;
@@ -130,8 +137,8 @@ PID *motor_PID;
 
 uint8_t my_digital_read(uint8_t port_reg, uint8_t bit)
 {
-      if (port_reg & _BV(bit)) return 1;
-      return 0;
+  if (port_reg & _BV(bit)) return 1;
+  return 0;
 }
 
 void limit(volatile uint16_t* val, uint16_t min, uint16_t max) {
@@ -193,8 +200,9 @@ void setup() {
   cbi(PORTB,TRIAC_LOG);
   cbi(PORTB,TACHO_LOG);
 
-  //abilita le interruzioni sul pin 3 e 2 di arduino (bit meno significativo e' il 3) pin 3 = int1 pin 2 = int0
-  EIMSK = 0b00000011; 
+  //abilita le interruzioni sul pin 3 e 2 di arduino (bit meno significativo e' il 2) pin 3 = int1 pin 2 = int0
+  EIMSK = 0b00000011;
+  ////////////////32
   
   //interruzioni sul rising e falling edge 01, 11 solo rising
   EICRA = 0b00001111;
@@ -339,12 +347,13 @@ void setup() {
   Output = output;
   //motor_PID = new PID(&Input, &Output, &Setpoint, Kp, Ki, Kd, P_ON_E, (void *) &computeBarrier, (void *) &tacho_tick_log, DIRECT);
 
-  motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_E, aaa, (uint16_t *) &tacho_tick_log, &search, (uint8_t *) &computeBarrier, (uint16_t *) &tacho_tick_log, DIRECT);
+  motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_E, &search, &tacho_tick_log, DIRECT);
   //TODO quando sopra un certo livello azzerare il valore di output per rendere il rallentamento migliore
   motor_PID->SetOutputLimits(0,output_min_speed_value);
   motor_PID->SetMode(AUTOMATIC);
   //motor_PID->SetSampleTime(10);
   //Serial.end();
+  delay_count = 1;
 }
 
 volatile uint8_t _tacho_trig = 0;
@@ -356,13 +365,17 @@ void loop() {
   if(my_digital_read(PIND, PROG_PIN)){
     motor_PID->SetMode(AUTOMATIC);
     Input = tacho_tick_log;
-    motor_PID->Compute();
+    if(computeBarrier){
+      // TOOD disabilitare le interruzioni??
+      motor_PID->Compute();
+      computeBarrier = 0;
+    }
     output = Output;
-    if(Serial.available() > 0){
+    /*if(Serial.available() > 0){
       serial_read = Serial.readString();
       String K = serial_read.substring(0,2);
       
-      /*if (K.equals("kp")) {
+      if (K.equals("kp")) {
         Kp = serial_read.substring(2).toFloat();
       } else if(K.equals("ki")){
         Ki = serial_read.substring(2).toFloat();
@@ -376,13 +389,24 @@ void loop() {
       Serial.print(Ki);
       Serial.print(" Kd:");
       Serial.println(Kd);
-      */
-    }
-    /*Serial.print(Setpoint);
-    Serial.print(" ");
-    Serial.print(Input);
-    Serial.print(" ");
-    Serial.println(Output);*/
+      
+    }*/
+/*
+      Serial.print(bbb.Kp);
+      Serial.print(" ");
+      Serial.print(bbb.Ki);
+      Serial.print(" ");
+      Serial.print(bbb.Kd);
+      Serial.print(" ");
+      
+      Serial.print(Setpoint);
+      Serial.print(" ");
+      Serial.print(Input);
+      Serial.print(" ");
+      Serial.print(Output);
+      Serial.print(" ");
+      Serial.println();
+*/
     
   } else {
     motor_PID->SetMode(MANUAL);
@@ -443,6 +467,11 @@ ISR(TIMER2_OVF_vect) {
     tick_after_tacho = 0;
     found_correct_tacho_phase = 1;
     _tacho_trig = !_tacho_trig;
+    if(_tacho_trig){
+      TURN_ON_TACHO_LOG();
+    } else {
+      TURN_OFF_TACHO_LOG();
+    }
   }
   //////////////////////////////////////
   tick_after_zcd++;
