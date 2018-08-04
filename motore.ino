@@ -7,6 +7,10 @@
 #include <EEPROM.h>
 #include "pin_definition.h"
 
+#define TEST_MODE 
+
+PID *motor_PID;
+
 volatile uint16_t zcd_tick_log = 0;
 volatile uint16_t tacho_tick_log = 0;
 volatile uint16_t tick_after_zcd = 0;
@@ -62,28 +66,46 @@ uint16_t output_max_speed_value = 0;
 double Setpoint, Input, Output;
 volatile uint8_t computeBarrier = 0;
 
-CoefficientPtr aaa = 0;
-Coefficient bbb;
+#ifdef TEST_MODE
 
-//funzione di ricerca dei parametri del pid
-CoefficientPtr search(){
-  if(Input > 500){
-    bbb.Ki = 0.0001;
-    bbb.Kp = 1;
-    bbb.Kd = 0;
-  } else {
-    bbb.Ki = 0.001;
-    bbb.Kp = 10;
-    bbb.Kd = 1;
+  volatile uint16_t delay_counter = 0;
+  volatile uint16_t last_delay_counter = 0;
+
+#endif
+
+///////////// FUNZIONI DI CONFIGURAZIONE PID ///////////////////
+
+#ifdef TEST_MODE
+
+  Coefficient k_param;
+  String serial_read;
+
+  //funzione di ricerca dei parametri del pid
+  
+  CoefficientPtr search(){
+    
+    return &k_param;
   }
-  return &bbb;
-}
 
+#else
+  Coefficient k_param;
 
-String serial_read;
+  CoefficientPtr search(){
+    if(Input > 500){
+      k_param.Ki = 0.0001;
+      k_param.Kp = 1;
+      k_param.Kd = 0;
+    } else {
+      k_param.Ki = 0.001;
+      k_param.Kp = 10;
+      k_param.Kd = 1;
+    }
+    return &k_param;
+  }
 
-PID *motor_PID;
-//FUNZIONI DI UTILITA'
+#endif
+
+//////////////////// FUNZIONI DI UTILITA' ///////////////////////
 
 uint8_t my_digital_read(uint8_t port_reg, uint8_t bit)
 {
@@ -136,6 +158,9 @@ void button_hold_request(void (*loop)(), void (* on_exit)()){
 void loop_read_fun(){
   output = map((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG, 1023, 0, 0, tick_per_phase);
 }
+
+//////////////////////////////////////////////////////////////////////
+
 
 void save_low_speed_exit_fun(){
   tacho_min_speed_value = tacho_tick_log;
@@ -198,8 +223,14 @@ void setup() {
   TCCR2B = 0b00000001;
   TIMSK2 = 0b00000001;
 
-  //disabilito interruzioni timer 0
-  TIMSK0 = 0b00000000;
+
+  #ifdef TEST_MODE
+  //abilito le interruzioni del timer per la serial.available
+    TIMSK0 = 0b00000001;
+  #else
+    //disabilito interruzioni timer 0
+    TIMSK0 = 0b00000000;
+  #endif
 
   //settaggio della lettura analogica
   //setto il voltaggio di riferimento del convertitore alla tensione di alimentazione
@@ -279,8 +310,10 @@ void setup() {
   
   motor_PID->SetMode(AUTOMATIC);
 
-  Serial.end();
-
+  #ifndef TEST_MODE
+    Serial.end();
+  #endif
+    
 }
 
 volatile uint8_t _tacho_trig = 0;
@@ -298,6 +331,38 @@ void loop() {
       motor_PID->Compute();
       computeBarrier = 0;
     }
+
+    #ifdef TEST_MODE
+    
+      if(delay_counter - last_delay_counter > 60000){
+        
+        if(Serial.available()){
+          serial_read = Serial.readString();
+          String K = serial_read.substring(0,2);
+          
+          if (K.equals("kp")) {
+            k_param.Kp = serial_read.substring(2).toFloat();
+          } else if(K.equals("ki")){
+            k_param.Ki = serial_read.substring(2).toFloat();
+          } else if(K.equals("kd")){
+            k_param.Kd = serial_read.substring(2).toFloat();
+          }
+          
+          Serial.print("Kp: ");
+          Serial.print(k_param.Kp);
+          Serial.print(" Ki: ");
+          Serial.print(k_param.Ki);
+          Serial.print(" Kd:");
+          Serial.println(k_param.Kd);
+        }
+        Serial.print(Setpoint);
+        Serial.print(" ");
+        Serial.print(Input);
+        Serial.print(" ");
+        Serial.println(Output);
+        last_delay_counter = delay_counter;
+      }
+    #endif
     
     output = Output;
     
@@ -376,6 +441,10 @@ ISR(TIMER2_OVF_vect) {
   //////////////////////////////////////
   tick_after_zcd++;
   tick_after_tacho++;
+
+  #ifdef TEST_MODE
+    delay_counter++;
+  #endif
 
   if (tick_after_zcd >= output && !triac_state) {
     //accendi il triac
