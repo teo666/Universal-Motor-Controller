@@ -7,7 +7,7 @@
 #include <EEPROM.h>
 #include "pin_definition.h"
 
-#define TEST_MODE 
+//#define TEST_MODE 
 
 PID *motor_PID;
 
@@ -78,29 +78,81 @@ volatile uint8_t computeBarrier = 0;
 #ifdef TEST_MODE
 
   Coefficient k_param;
+  
   String serial_read;
 
   //funzione di ricerca dei parametri del pid
   
   CoefficientPtr search(){
-    
     return &k_param;
   }
 
 #else
-  Coefficient k_param;
+  Coefficient k_param[9];
+
+  void init_params(){
+    k_param[0].Kp = 0.3;
+    k_param[0].Ki = 0.0001;
+    k_param[0].Kd = 0;
+    
+    k_param[1].Kp = 0.8;
+    k_param[1].Ki = 0.0001;
+    k_param[1].Kd = 0;
+    
+    k_param[2].Kp = 1;
+    k_param[2].Ki = 0.0001;
+    k_param[2].Kd = 0;
+    
+    k_param[3].Kp = 1.5;
+    k_param[3].Ki = 0.0002;
+    k_param[3].Kd = 0;
+    
+    k_param[4].Kp = 2;
+    k_param[4].Ki = 0.0002;
+    k_param[4].Kd = 0;
+    
+    k_param[5].Kp = 3;
+    k_param[5].Ki = 0.0002;
+    k_param[5].Kd = 0;
+    
+    k_param[6].Kp = 3;
+    k_param[6].Ki = 0.001;
+    k_param[6].Kd = 0;
+    
+    k_param[7].Kp = 3;
+    k_param[7].Ki = 0.001;
+    k_param[7].Kd = 0;
+    
+    k_param[8].Kp = 7;
+    k_param[8].Ki = 0.002;
+    k_param[8].Kd = 0;
+  }
 
   CoefficientPtr search(){
-    if(Input > 500){
-      k_param.Ki = 0.0001;
-      k_param.Kp = 1;
-      k_param.Kd = 0;
-    } else {
-      k_param.Ki = 0.001;
-      k_param.Kp = 10;
-      k_param.Kd = 1;
-    }
-    return &k_param;
+   double _val = min(Setpoint,Input);
+   uint8_t index = 0;
+   
+   if(_val >= 550){
+    index = 0;
+   } else if( _val >= 500 && _val < 550){
+    index = 1;
+   }else if( _val >= 450 && _val < 500){
+    index = 2;
+   }else if( _val >= 400 && _val < 450){
+    index = 3;
+   }else if( _val >= 350 && _val < 400){
+    index = 4;
+   }else if( _val >= 250 && _val < 350){
+    index = 5;
+   }else if( _val >= 200 && _val < 250){
+    index = 6;
+   }else if( _val >= 150 && _val < 200){
+    index = 7;
+   }else if( _val <= 150){
+    index = 8;
+   }
+   //Serial.println(index);
+   return &k_param[index];
   }
 
 #endif
@@ -223,9 +275,8 @@ void setup() {
   TCCR2B = 0b00000001;
   TIMSK2 = 0b00000001;
 
-
   #ifdef TEST_MODE
-  //abilito le interruzioni del timer per la serial.available
+    //abilito le interruzioni del timer per la serial.available
     TIMSK0 = 0b00000001;
   #else
     //disabilito interruzioni timer 0
@@ -251,6 +302,9 @@ void setup() {
   Serial.println(F("Calculating frequency ..."));
   tick_per_phase = calculate_main_power_frequency();
 
+  Serial.print(F("Number of tick per half period: "));
+  Serial.println(tick_per_phase);
+    
   if(!my_digital_read(PIND, PROG_PIN)){
     
     Serial.println(F("Programming mode"));
@@ -258,8 +312,7 @@ void setup() {
     //se il bottone e' pigiato chiededre di rilasciarlo
     check_programming_button();
     
-    Serial.print(F("Number of tick per half period: "));
-    Serial.println(tick_per_phase);
+    
     prog_output = (HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG;
     if(prog_output){
       Serial.println(F("Turn speed potentiometer to lowest value ..."));
@@ -300,20 +353,25 @@ void setup() {
   Serial.print(output_min_speed_value);
   Serial.print(F(", HIGH speed output value: "));
   Serial.println(output_max_speed_value);
+
+  #ifndef TEST_MODE
+    init_params();
+  #endif
+  
   output = output_min_speed_value;
   Output = output;
 
   motor_PID = new PID(&Input, &Output, &Setpoint, P_ON_M, &search, &tacho_tick_log, DIRECT);
   
   //TODO quando sopra un certo livello azzerare il valore di output per rendere il rallentamento migliore
-  motor_PID->SetOutputLimits(0, output_min_speed_value );
+  motor_PID->SetOutputLimits(0, output_min_speed_value + (abs(tick_per_phase - output_min_speed_value) >> 1) );
   
   motor_PID->SetMode(AUTOMATIC);
 
   #ifndef TEST_MODE
-    Serial.end();
+    //Serial.end();
   #endif
-    
+ 
 }
 
 volatile uint8_t _tacho_trig = 0;
@@ -363,7 +421,7 @@ void loop() {
         last_delay_counter = delay_counter;
       }
     #endif
-    
+
     output = Output;
     
   } else {

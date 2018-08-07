@@ -52,30 +52,33 @@ bool PID::Compute() {
   if (!pOnE)
     outputSum -= KS->Kp * dInput;
 
-  if (outputSum > outMax)
+  if (outputSum > outMax){
     outputSum = outMax;
-  else if (outputSum < outMin)
+  } else if (outputSum < outMin){
     outputSum = outMin;
+  }
 
   /*Add Proportional on Error, if P_ON_E is specified*/
   double output;
-  if (pOnE)
+  if (pOnE){
     output = KS->Kp * error;
-  else
+  } else {
     output = 0;
+  }
 
   /*Compute Rest of PID Output*/
   output += outputSum - (KS->Kd / (*timeInterval) * dInput);
 
-  if (output > outMax)
+  if (output > outMax){
     output = outMax;
-  else if (output < outMin)
+  } else if (output < outMin){
     output = outMin;
+  }
+  
   *myOutput = output;
 
   /*Remember some variables for next time*/
   lastInput = input;
-
   return true;
 }
 
