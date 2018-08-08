@@ -3,7 +3,7 @@
  * by teo Basili <basili.teo@gmail.com> https://github.com/teo666
  **********************************************************************************************/
 
-#define TEST_MODE
+//#define TEST_MODE
 
 #include "PID_ASYNC.h"
 #include "pin_definition.h"
@@ -352,11 +352,11 @@ void loop() {
         }
 
         Serial.print("Kp: ");
-        Serial.print(k_param.Kp);
+        Serial.print(k_param.Kp,8);
         Serial.print(" Ki: ");
-        Serial.print(k_param.Ki);
+        Serial.print(k_param.Ki,8);
         Serial.print(" Kd:");
-        Serial.println(k_param.Kd);
+        Serial.println(k_param.Kd,8);
       }
       Serial.print("Setpoint: ");
       Serial.print(Setpoint);

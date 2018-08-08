@@ -291,6 +291,14 @@ and **value** is a floating point value like
 
 While program runs it shows current *Setpoint* and *Input* values that can be used to discriminate the correct PID weights inside *search* function, that is where previous unknow numbers come from. With these value it is possible to see how UMC react to load change, considering that *Input* value should be near as possible to *Setpoint*.
 
+Once done you can create your own *init_params* and *search* function and comment first line into **Universal_Motor_Controller.ino** file to get
+``` c++
+//#define TEST_MODE
+```
+and flash again.
+
+Enjoy!
+
 # Changelog
 
 v1.0.1
