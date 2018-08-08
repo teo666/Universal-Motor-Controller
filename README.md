@@ -255,11 +255,11 @@ CoefficientPtr search() {
 }
 ```
 
-- on the top an array is declared hold the different *Coefficient* structures,
-- the method **init_params()** is declared, it allow you to initialize the array, in the above code it is initialized statically, but you could need to read some value from EEPROM and store them inside the array.
-- the *search* function is declared, it is responsible for providing dynamic parameters to PID in relation to speed of the motor.
+- on the top an array is declared to hold different *Coefficient* structures,
+- the method **init_params()** is declared, it allow you to initialize the array, in the above code it is initialized statically, but you could need to read some value from EEPROM and store them inside it.
+- the *search* function is declared, it is responsible for providing dynamic parameters to PID in relation to the speed of the motor.
 
-Inside *configuration.h* file you have access to all available global variables, for example the Setpoint, Input and Output PID variables, but **DON'T MODIFY THEM, JUST READ THEM**.
+Inside *configuration.h* file you have access to all available global variables, for example Setpoint, Input and Output PID variables, but **DON'T MODIFY THEM, JUST READ THEM**.
 
 Ok... but, where those value (500, 350 and so on) come from?  
 They come from **test mode**. *test mode* allow you to run UMC, change speed with potentiometer and set dynamically PID parameters to test them with no need to flash the ROM of the avr everytime.
@@ -268,25 +268,28 @@ To use *test mode* uncomment first line in the **Universal_Motor_Controller.ino*
 #define TEST_MODE
 ```
 and then flash avr.  
-Open serial monitor, and current *Setpoint*, *Input* and *Output* values are shown. You can change the *kp*, *ki* and *kd* parameters by digiting them in serial input, the correct format is
+Open serial monitor, current *Setpoint*, *Input* and *Output* values are shown. You can change the *kp*, *ki* and *kd* parameters in serial input, giving the command
 ``` bash
 <param_name> <value>
 ```
-where param_name can be 
+where **param_name** can be 
 ``` bash
 kp
 ki
 kd
 ```
 to set respectively proportional, integral or derivative parameter  
-and value is a floating point value like 
+and **value** is a floating point value like 
 ``` bash
 0.0002
 ```
-**CARE: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS**  
-**CARE: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**
+**CARE: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS** 
 
-While program run it show current *Setpoint* and *Input* values that can be used to discriminate the correct PID weights inside *search* function, that is where previous unknow numbers come from.
+**CARE: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**  
+
+**ATTENTION: K-VALUES ARE SHOWN WITH EIGHT DECIMAL DIGIT PRECISION**
+
+While program runs it shows current *Setpoint* and *Input* values that can be used to discriminate the correct PID weights inside *search* function, that is where previous unknow numbers come from. With these value it is possible to see how UMC react to load change, considering that *Input* value should be near as possible to *Setpoint*.
 
 # Changelog
 
