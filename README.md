@@ -136,9 +136,9 @@ All together
 
 ### Demo video
 
-This [video](https://youtu.be/NKULTa6kquY) is a demonstration about UMC capabilities
-This [video](https://youtu.be/l1mFbbu4X3Q) show capabilities of UMC on low speed
-These two [video1](https://youtu.be/YVdLVX_Wkz4) and [video2](https://youtu.be/LLw0HUfIIPY) show a motor driven by UMC connected to a bench grindstone diconected to main power
+This [video](https://youtu.be/NKULTa6kquY) is a demonstration about UMC capabilities.  
+This [video](https://youtu.be/l1mFbbu4X3Q) show capabilities of UMC on low speed.  
+These two [video1](https://youtu.be/YVdLVX_Wkz4) and [video2](https://youtu.be/LLw0HUfIIPY) show a motor driven by UMC connected to a bench grindstone disconnected from main power.
 # Speed limiter
 
 UMC comes with a spftearec based speed limiter. Speed limiter use the feedback signal to to achive this goal. Speed limiter is usefull because it allow to map all potentiometer turning range inside the desired motor speed limits.  
