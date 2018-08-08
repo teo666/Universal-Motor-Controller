@@ -133,7 +133,6 @@ All together
 
 ![alt text](./doc/img/assembled_board.jpg)
 
-
 ### Demo video
 
 This [video](https://youtu.be/NKULTa6kquY) is a demonstration about UMC capabilities.  
@@ -156,6 +155,138 @@ Programming Button is a push button that if pressed connect PORTD,PIN6 (pin 6 of
 - read serial monitor keeping *programming button* pressed and follow printed instructions
 
 At the end of process if you turn potentiometer the speed motor is limeted inside selected range.
+
+# Configuration
+
+With 1.0.1 version UMC comes with dynamic PID parameter change. Basically UMC can change its PID parameter in relation to its speed, in fact some parameters that fit correctly at a fixed speed can be wrong at lower or higher speed, making UMC non-reactive or causing rotation spikes.  
+To achive this gol the constructor of PID library take extra parameters, such as a function, that it is called inside *compute()* PID function to get the correct PID parameters.
+That function is named **search** and it is placed inside ***configuration.h*** file. You have to customize *search* function to satisfy your preferences.
+The signature of *search* function is the following
+``` c++
+CoefficientPtr search() {
+    ...
+}
+```
+it must return a *CoefficientPtr* that is define in PID_ASYNC.h as
+``` c++
+typedef struct _coefficient {
+  double Kp;
+  double Ki;
+  double Kd;
+} Coefficient;
+
+typedef Coefficient *CoefficientPtr;
+```
+Inside *configuration.h* file you can find an example of search function that meets my needs, the code is the following
+``` c++
+//static parameter declaration
+Coefficient k_param[9];
+
+/**
+* function called inside setup() to fetch parameter
+*/
+void init_params() {
+  k_param[0].Kp = 0.3;
+  k_param[0].Ki = 0.0001;
+  k_param[0].Kd = 0;
+
+  k_param[1].Kp = 0.8;
+  k_param[1].Ki = 0.0001;
+  k_param[1].Kd = 0;
+
+  k_param[2].Kp = 1;
+  k_param[2].Ki = 0.0001;
+  k_param[2].Kd = 0;
+
+  k_param[3].Kp = 1.5;
+  k_param[3].Ki = 0.0002;
+  k_param[3].Kd = 0;
+
+  k_param[4].Kp = 2;
+  k_param[4].Ki = 0.0002;
+  k_param[4].Kd = 0;
+
+  k_param[5].Kp = 3;
+  k_param[5].Ki = 0.0002;
+  k_param[5].Kd = 0;
+
+  k_param[6].Kp = 3;
+  k_param[6].Ki = 0.001;
+  k_param[6].Kd = 0;
+
+  k_param[7].Kp = 3;
+  k_param[7].Ki = 0.001;
+  k_param[7].Kd = 0;
+
+  k_param[8].Kp = 7;
+  k_param[8].Ki = 0.002;
+  k_param[8].Kd = 0;
+}
+
+/**
+ * function called inside compute() PID function
+ * get the minimum value from Setpoint and Input 
+ * and use it to chose the correct parameters
+ */
+CoefficientPtr search() {
+  double _val = min(Setpoint, Input);
+  uint8_t index = 0;
+
+  if (_val >= 550) {
+    index = 0;
+  } else if (_val >= 500 && _val < 550) {
+    index = 1;
+  } else if (_val >= 450 && _val < 500) {
+    index = 2;
+  } else if (_val >= 400 && _val < 450) {
+    index = 3;
+  } else if (_val >= 350 && _val < 400) {
+    index = 4;
+  } else if (_val >= 250 && _val < 350) {
+    index = 5;
+  } else if (_val >= 200 && _val < 250) {
+    index = 6;
+  } else if (_val >= 150 && _val < 200) {
+    index = 7;
+  } else if (_val <= 150) {
+    index = 8;
+  }
+  return &k_param[index];
+}
+```
+
+- on the top an array is declared hold the different *Coefficient* structures,
+- the method **init_params()** is declared, it allow you to initialize the array, in the above code it is initialized statically, but you could need to read some value from EEPROM and store them inside the array.
+- the *search* function is declared, it is responsible for providing dynamic parameters to PID in relation to speed of the motor.
+
+Inside *configuration.h* file you have access to all available global variables, for example the Setpoint, Input and Output PID variables, but **DON'T MODIFY THEM, JUST READ THEM**.
+
+Ok... but, where those value (500, 350 and so on) come from?  
+They come from **test mode**. *test mode* allow you to run UMC, change speed with potentiometer and set dynamically PID parameters to test them with no need to flash the ROM of the avr everytime.
+To use *test mode* uncomment first line in the **Universal_Motor_Controller.ino** file to get
+``` c++
+#define TEST_MODE
+```
+and then flash avr.  
+Open serial monitor, and current *Setpoint*, *Input* and *Output* values are shown. You can change the *kp*, *ki* and *kd* parameters by digiting them in serial input, the correct format is
+``` bash
+<param_name> <value>
+```
+where param_name can be 
+``` bash
+kp
+ki
+kd
+```
+to set respectively proportional, integral or derivative parameter  
+and value is a floating point value like 
+``` bash
+0.0002
+```
+**CARE: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS**  
+**CARE: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**
+
+While program run it show current *Setpoint* and *Input* values that can be used to discriminate the correct PID weights inside *search* function, that is where previous unknow numbers come from.
 
 # Changelog
 
