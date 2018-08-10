@@ -165,16 +165,16 @@ At the end of process if you turn potentiometer the speed motor is limeted insid
 
 # Configuration
 
-With 1.0.1 version UMC comes with dynamic PID parameter change. Basically UMC can change its PID parameter in relation to its speed, in fact some parameters that fit correctly at a fixed speed can be wrong at lower or higher speed, making UMC non-reactive or causing rotation spikes.  
-To achive this gol the constructor of PID library take extra parameters, such as a function, that it is called inside *compute()* PID function to get the correct PID parameters.
-That function is named **search** and it is placed inside ***configuration.h*** file. You have to customize *search* function to satisfy your preferences.
-The signature of *search* function is the following
+With 1.0.1 version UMC comes with dynamic PID parameter change. Basically UMC can change its PID parameter in relation to motor speed, in fact some parameters that work correctly at a fixed speed can be wrong at lower or higher speed, making UMC non-reactive or causing rotation spikes.  
+To achive this gol the constructor of PID library take extra parameters, such as a function, that it is called inside `compute()` PID function to get the correct PID parameters.
+That function is named `search` and it is placed inside `configuration.h` file. You have to customize `search` function to satisfy your preferences.
+The signature of `search` function is the following
 ``` c++
 CoefficientPtr search() {
     ...
 }
 ```
-it must return a *CoefficientPtr* that is define in PID_ASYNC.h as
+it must return a `CoefficientPtr` that is define in `PID_ASYNC.h` as
 ``` c++
 typedef struct _coefficient {
   double Kp;
@@ -184,7 +184,7 @@ typedef struct _coefficient {
 
 typedef Coefficient *CoefficientPtr;
 ```
-Inside *configuration.h* file you can find an example of search function that meets my needs, the code is the following
+Inside `configuration.h` file you can find an example of search function that meets my needs, the code is the following
 ``` c++
 //static parameter declaration
 Coefficient k_param[9];
@@ -262,15 +262,15 @@ CoefficientPtr search() {
 }
 ```
 
-- on the top an array is declared to hold different *Coefficient* structures,
-- the method **init_params()** is declared, it allow you to initialize the array, in the above code it is initialized statically, but you could need to read some value from EEPROM and store them inside it.
-- the *search* function is declared, it is responsible for providing dynamic parameters to PID in relation to the speed of the motor.
+- on the top an array is declared to hold different `Coefficient` structures,
+- the method `init_params()` is declared, it allow you to initialize the array, in the above code it is initialized statically, but you could need to read some value from EEPROM and store them inside it.
+- the `search` function is declared, it is responsible for providing dynamic parameters to PID in relation to the speed of the motor.
 
-Inside *configuration.h* file you have access to all available global variables, for example Setpoint, Input and Output PID variables, but **DON'T MODIFY THEM, JUST READ THEM**.
+Inside `configuration.h` file you have access to all available global variables, for example Setpoint, Input and Output PID variables, but **DON'T MODIFY THEM, JUST READ THEM**.
 
 Ok... but, where those value (500, 350 and so on) come from?  
 They come from **test mode**. *test mode* allow you to run UMC, change speed with potentiometer and set dynamically PID parameters to test them with no need to flash the ROM of the avr everytime.
-To use *test mode* uncomment first line in the **Universal_Motor_Controller.ino** file to get
+To use *test mode* uncomment first line in the `Universal_Motor_Controller.ino` file to get
 ``` c++
 #define TEST_MODE
 ```
@@ -279,26 +279,26 @@ Open serial monitor, current *Setpoint*, *Input* and *Output* values are shown. 
 ``` bash
 <param_name> <value>
 ```
-where **param_name** can be 
+where `param_name` can be 
 ``` bash
 kp
 ki
 kd
 ```
 to set respectively proportional, integral or derivative parameter  
-and **value** is a floating point value like 
+and `value` is a floating point value like 
 ``` bash
 0.0002
 ```
-**CARE: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS** 
+**ATTENTION: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS** 
 
-**CARE: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**  
+**ATTENTION: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**  
 
 **ATTENTION: K-VALUES ARE SHOWN WITH EIGHT DECIMAL DIGIT PRECISION**
 
 While program runs it shows current *Setpoint* and *Input* values that can be used to discriminate the correct PID weights inside *search* function, that is where previous unknow numbers come from. With these value it is possible to see how UMC react to load change, considering that *Input* value should be near as possible to *Setpoint*.
 
-Once done you can create your own *init_params* and *search* function and comment first line into **Universal_Motor_Controller.ino** file to get
+Once done you can create your own `init_params` and `search` function and comment first line into `Universal_Motor_Controller.ino` file to get
 ``` c++
 //#define TEST_MODE
 ```
