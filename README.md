@@ -165,6 +165,8 @@ At the end of process if you turn potentiometer the speed motor is limeted insid
 
 # Configuration
 
+Attention: before reading this section be sure that you know what PID parameters are, otherwise follow links at the end of "Working principle" section.
+
 With 1.0.1 version UMC comes with dynamic PID parameter change. Basically UMC can change its PID parameter in relation to motor speed, in fact some parameters that work correctly at a fixed speed can be wrong at lower or higher speed, making UMC non-reactive or causing rotation spikes.  
 To achive this gol the constructor of PID library take extra parameters, such as a function, that it is called inside `compute()` PID function to get the correct PID parameters.
 That function is named `search` and it is placed inside `configuration.h` file. You have to customize `search` function to satisfy your preferences.
@@ -290,9 +292,9 @@ and `value` is a floating point value like
 ``` bash
 0.0002
 ```
-**ATTENTION: THERE IS ONLY ONE SPECE BERTWEEN TWO ARGUMENTS** 
+**ATTENTION: THERE IS ONLY ONE SPACE BERTWEEN TWO ARGUMENTS** 
 
-**ATTENTION: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET ALL THEM TOGHETER, ONLY ONE BY ONE**  
+**ATTENTION: PARAMETERS MUST BE GIVEN SEPARATELY, YOU CAN'T SET THEM ALL TOGHETER, ONLY ONE BY ONE**  
 
 **ATTENTION: K-VALUES ARE SHOWN WITH EIGHT DECIMAL DIGIT PRECISION**
 
@@ -322,8 +324,13 @@ library explanation: http://brettbeauregard.com/blog/2011/04/improving-the-begin
 
 This is a nightly UMC version, there are many things to improve
 
-- Lower speed limit can't be set to 0.
+### Higher priority 
 - Slow start integration
+- Allow rotation inversion
+
+### Lower priority
+
+- Lower speed limit can't be set to 0.
 - Program lives as it is, there isn't an Object Oriented Programming model and integrations with other libraries are difficult due to time dependent application nature.
 - UMC doesn't allow connect multiple motor due low number of Atmega-328p interrupt pins. One is necessary for ZCD circuit the other for feedback circuit. I'm trying to remove this lack using a frequncy to analog converter that technically will allow drive up to six motor. Should be possible monitor feedback signal without the need of interrupt pin by checking it periodically inside timer's ISR, but I have not tested this method yet.
 - OOP usage is releted to the above two problems.
