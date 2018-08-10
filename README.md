@@ -133,6 +133,19 @@ All together
 
 ![alt text](./doc/img/assembled_board.jpg)
 
+### Motor connection
+
+Usually universal motor has six cable:
+- two for the rotor
+- two for the stator
+- two for the tachogenerator
+
+The cables of tachogenerator have to be connected to the tacho circuit and the order is irrilevant.  
+The rotor and stator windings have to be connected in series togheter with main AC power source and power circuit, as show below.  
+**NOTE: swap stator terminals to change rotation direction of the motor.**
+
+![alt text](./doc/img/motor_connection.png)
+
 ### UMC box
 
 This photo show UMC with its box, taken from an old ATX power supply
