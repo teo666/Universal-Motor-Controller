@@ -335,9 +335,13 @@ library explanation: http://brettbeauregard.com/blog/2011/04/improving-the-begin
 
 # Known problems and Improvements
 
-This is a nightly UMC version, there are many things to improve
+This is an early UMC version and there are many things to improve.  
+I hope that someone will find this project interesting helping me (and diyers community) to improve its capabilities.
 
 ### Higher priority 
+- Improve initial frequency calculation by decreasing needed time
+- Avoid gives full power if zero crossing detector circuit fail
+- Motor hang detection
 - Slow start integration
 - Allow rotation inversion
 
