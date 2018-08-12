@@ -68,12 +68,8 @@ uint16_t output_max_speed_value = 0;
 double Setpoint, Input, Output;
 volatile uint8_t computeBarrier = 0;
 
-#ifdef TEST_MODE
-
 volatile uint16_t delay_counter = 0;
 volatile uint16_t last_delay_counter = 0;
-
-#endif
 
 //////////////////// FUNZIONI DI UTILITA' ///////////////////////
 
@@ -311,7 +307,7 @@ void setup() {
   motor_PID->SetMode(AUTOMATIC);
 
 #ifndef TEST_MODE
-  // Serial.end();
+  Serial.end();
 #endif
 }
 
@@ -478,9 +474,7 @@ ISR(TIMER2_OVF_vect) {
   tick_after_zcd++;
   tick_after_tacho++;
 
-#ifdef TEST_MODE
   delay_counter++;
-#endif
 
   if (tick_after_zcd >= output && !triac_state) {
     // accendi il triac
