@@ -352,11 +352,11 @@ void loop() {
         }
 
         Serial.print("Kp: ");
-        Serial.print(k_param.Kp,8);
+        Serial.print(k_param.Kp, 8);
         Serial.print(" Ki: ");
-        Serial.print(k_param.Ki,8);
+        Serial.print(k_param.Ki, 8);
         Serial.print(" Kd:");
-        Serial.println(k_param.Kd,8);
+        Serial.println(k_param.Kd, 8);
       }
       Serial.print("Setpoint: ");
       Serial.print(Setpoint);
@@ -375,6 +375,21 @@ void loop() {
     output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023,
                  tick_per_phase, 0);
   }
+
+  if (tick_after_zcd > tick_per_phase << 3) {
+    // zcd circuit fault: in caso di fault dello zcd diabilito il triac e
+    // imposto l'output al massimo valore, equivale a motore spento
+
+    //questa cosa puo' essere fatta anche nel isr, valutare se lasciare qui o spostare
+    output = 65535;
+    TURN_OFF_TRIAC();
+  }
+
+  /*if(tick_after_tacho > tacho_min_speed_value << 3){
+    //motor hang
+    output = 65535;
+    TURN_OFF_TRIAC();
+  }*/
 }
 
 // handler dell' interrupt associato al pin 2 di arduino
@@ -437,14 +452,14 @@ ISR(TIMER2_OVF_vect) {
     tick_after_tacho = 0;
     found_correct_tacho_phase = 1;
 
-    #ifdef TEST_MODE
+#ifdef TEST_MODE
     _tacho_trig = !_tacho_trig;
     if (_tacho_trig) {
       TURN_ON_TACHO_LOG();
     } else {
       TURN_OFF_TACHO_LOG();
     }
-    #endif
+#endif
   }
   //////////////////////////////////////
   tick_after_zcd++;
