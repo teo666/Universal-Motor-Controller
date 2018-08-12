@@ -375,9 +375,23 @@ void loop() {
     output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023,
                  tick_per_phase, 0);
   }
+
+  if(tick_after_zcd > tick_per_phase << 3 ){
+    //Serial.println("sss");
+    //zcd circuit fault: in caso di fault dello zcd diabilito il triac e imposto l'output al massimo valore, equivale a motore spento
+    output = 65535;
+    TURN_OFF_TRIAC();
+  }
+
+
+  /*if(tick_after_tacho > tacho_min_speed_value << 3){
+    //motor hang
+    output = 65535;
+    TURN_OFF_TRIAC();
+  }*/
 }
 
-// handler dell' interrupt associato al pin 1 di arduino
+// handler dell' interrupt associato al pin 2 di arduino
 // utilizzato per la sincronizzazione di fase, e' connesso
 // all'uscita del circuito di ZCD
 ISR(INT0_vect) {
@@ -387,7 +401,7 @@ ISR(INT0_vect) {
   ANALOG_READ();
 }
 
-// handler dell' interrupt associato al pin 2 di arduino
+// handler dell' interrupt associato al pin 3 di arduino
 // utilizzato per il rilevamento del tacogeneratore
 ISR(INT1_vect) {
   tacho_error_correction = 0;
@@ -436,12 +450,15 @@ ISR(TIMER2_OVF_vect) {
     computeBarrier = 1;
     tick_after_tacho = 0;
     found_correct_tacho_phase = 1;
+
+    #ifdef TEST_MODE
     _tacho_trig = !_tacho_trig;
     if (_tacho_trig) {
       TURN_ON_TACHO_LOG();
     } else {
       TURN_OFF_TACHO_LOG();
     }
+    #endif
   }
   //////////////////////////////////////
   tick_after_zcd++;
