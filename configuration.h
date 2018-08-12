@@ -3,6 +3,9 @@
 #ifndef PID_PARAM_CONFIG
   #define PID_PARAM_CONFIG
 
+#define ZCD_FAIL_LIMIT 2500
+#define TACHO_FAIL_LIMIT 5000
+
 Coefficient k_param[9];
 
 void init_params() {

@@ -53,7 +53,6 @@ letture
 volatile uint8_t HIGH_ANALOG_REG = 0;
 volatile uint8_t LOW_ANALOG_REG = 0;
 
-volatile uint8_t frequency_calc = 0;
 volatile uint8_t frequency_calc_added = 0;
 
 // il range dell' output va da 0 a 485, a 0 il motore gira a foo 485 val minimo
@@ -93,10 +92,10 @@ void limit(volatile uint16_t *val, uint16_t min, uint16_t max) {
 }
 
 uint16_t calculate_main_power_frequency() {
-  frequency_calc = 1;
+  uint8_t frequency_calc = 0;
   uint32_t tick_sum = 0;
 
-  while (frequency_calc != 0) {
+  while (frequency_calc < 20) {
     if (frequency_calc_added) {
       frequency_calc_added = 0;
       tick_sum += zcd_tick_log;
@@ -104,7 +103,7 @@ uint16_t calculate_main_power_frequency() {
     }
   }
 
-  return tick_sum / 255;
+  return tick_sum / 20;
 }
 
 void check_programming_button() {
@@ -376,20 +375,34 @@ void loop() {
                  tick_per_phase, 0);
   }
 
-  if (tick_after_zcd > tick_per_phase << 3) {
-    // zcd circuit fault: in caso di fault dello zcd diabilito il triac e
-    // imposto l'output al massimo valore, equivale a motore spento
+  /**
+   * rendo il codice invulnerabile ai cambiamenti di frequenza della AC
+   * in realta' ad essere precisi dovrei ricalcolare i valori limite di
+   * velocita'
+   * */
+  tick_per_phase = zcd_tick_log;
 
-    //questa cosa puo' essere fatta anche nel isr, valutare se lasciare qui o spostare
+  /**
+   * zcd circuit fault: in caso di fault dello zcd disabilito il triac e
+   * imposto l'output al massimo valore, equivale a motore spento
+   * questa cosa puo' essere fatta anche nel isr, valutare se lasciare qui o
+   * spostare
+   * */
+  if (tick_after_zcd > ZCD_FAIL_LIMIT) {
     output = 65535;
     TURN_OFF_TRIAC();
   }
 
-  /*if(tick_after_tacho > tacho_min_speed_value << 3){
-    //motor hang
+#ifndef TEST_MODE
+  /**
+   * TODO: rilevazione blocco del motore completamente da rivedere
+   * */
+  if (tick_after_tacho > TACHO_FAIL_LIMIT) {
     output = 65535;
     TURN_OFF_TRIAC();
-  }*/
+  }
+#endif
+
 }
 
 // handler dell' interrupt associato al pin 2 di arduino
