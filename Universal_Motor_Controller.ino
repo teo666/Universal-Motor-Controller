@@ -375,20 +375,6 @@ void loop() {
     output = map(((HIGH_ANALOG_REG << 8) | LOW_ANALOG_REG), 0, 1023,
                  tick_per_phase, 0);
   }
-
-  if(tick_after_zcd > tick_per_phase << 3 ){
-    //Serial.println("sss");
-    //zcd circuit fault: in caso di fault dello zcd diabilito il triac e imposto l'output al massimo valore, equivale a motore spento
-    output = 65535;
-    TURN_OFF_TRIAC();
-  }
-
-
-  /*if(tick_after_tacho > tacho_min_speed_value << 3){
-    //motor hang
-    output = 65535;
-    TURN_OFF_TRIAC();
-  }*/
 }
 
 // handler dell' interrupt associato al pin 2 di arduino
