@@ -389,15 +389,15 @@ void loop() {
     TURN_OFF_TRIAC();
   }
 
-#ifndef TEST_MODE
   /**
    * TODO: rilevazione blocco del motore completamente da rivedere
    * */
   if (tick_after_tacho > TACHO_FAIL_LIMIT) {
-    output = 65535;
-    TURN_OFF_TRIAC();
+    Serial.println("hang detection");
+    /*output = 65535;
+    TURN_OFF_TRIAC();*/
   }
-#endif
+
 
 }
 
