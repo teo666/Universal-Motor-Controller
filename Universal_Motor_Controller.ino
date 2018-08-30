@@ -307,7 +307,7 @@ void setup() {
   motor_PID->SetMode(AUTOMATIC);
 
 #ifndef TEST_MODE
-  Serial.end();
+  //Serial.end();
 #endif
 }
 
@@ -390,10 +390,10 @@ void loop() {
   }
 
   /**
-   * TODO: rilevazione blocco del motore completamente da rivedere
+   * rilevamento blocco del motore
    * */
   if (tick_after_tacho > TACHO_FAIL_LIMIT) {
-    Serial.println("hang detection");
+    //Serial.println("hang detection");
     /*output = 65535;
     TURN_OFF_TRIAC();*/
   }
