@@ -333,21 +333,24 @@ library explanation: http://brettbeauregard.com/blog/2011/04/improving-the-begin
 - Code revisiting.
 - UMC comes now with a test mode usefull for calibration.
 
+v1.0.2
+- Improved initial frequency calculation by decreasing needed time
+- Added zero crossing detection circuit fail detection condition. Before this version when a zcd circuit fail occur UMC gave all power to the motor
+- Added motor hang/stop detection condition (early version to use with caution)
+- UMC is now (partially) invulnerable to the power line frequency changes
+
 # Known problems and Improvements
 
 This is an early UMC version and there are many things to improve.  
 I hope that someone will find this project interesting helping me (and diyers community) to improve its capabilities.
 
 ### Higher priority 
-- Improve initial frequency calculation by decreasing needed time
-- Avoid gives full power if zero crossing detector circuit fail
-- Motor hang detection
-- Slow start integration
-- Allow rotation inversion
+- Slow start integration (via PID controller)
+- Allow rotation inversion (require hardware modification and hang/stop detection)
 
 ### Lower priority
 
-- Lower speed limit can't be set to 0.
+- Lower speed limit can't be set to 0rpm.
 - Program lives as it is, there isn't an Object Oriented Programming model and integrations with other libraries are difficult due to time dependent application nature.
 - UMC doesn't allow connect multiple motor due low number of Atmega-328p interrupt pins. One is necessary for ZCD circuit the other for feedback circuit. I'm trying to remove this lack using a frequncy to analog converter that technically will allow drive up to six motor. Should be possible monitor feedback signal without the need of interrupt pin by checking it periodically inside timer's ISR, but I have not tested this method yet.
 - OOP usage is releted to the above two problems.

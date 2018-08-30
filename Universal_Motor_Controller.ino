@@ -1,5 +1,5 @@
 /**********************************************************************************************
- * Arduino Universal Motor Controller - Version 1.0.1
+ * Arduino Universal Motor Controller - Version 1.0.2
  * by teo Basili <basili.teo@gmail.com> https://github.com/teo666
  **********************************************************************************************/
 
@@ -374,7 +374,8 @@ void loop() {
   /**
    * rendo il codice invulnerabile ai cambiamenti di frequenza della AC
    * in realta' ad essere precisi dovrei ricalcolare i valori limite di
-   * velocita'
+   * velocita', ma per cambiamenti minimi (che dovrebbero essere la
+   * regola) non e' necessario
    * */
   tick_per_phase = zcd_tick_log;
 
@@ -393,6 +394,7 @@ void loop() {
    * rilevamento blocco del motore
    * */
   if (tick_after_tacho > TACHO_FAIL_LIMIT) {
+    //do something
     //Serial.println("hang detection");
     /*output = 65535;
     TURN_OFF_TRIAC();*/
