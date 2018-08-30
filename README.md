@@ -338,6 +338,7 @@ v1.0.2
 - Added zero crossing detection circuit fail detection condition. Before this version when a zcd circuit fail occur UMC gave all power to the motor
 - Added motor hang/stop detection condition (early version to use with caution)
 - UMC is now (partially) invulnerable to the power line frequency changes
+- Added eagle project files including circuit schematic and board layout
 
 # Known problems and Improvements
 
