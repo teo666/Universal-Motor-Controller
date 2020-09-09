@@ -7,6 +7,10 @@
 
 #include "PID_ASYNC.h"
 #include "pin_definition.h"
+
+#define ZCD_FAIL_LIMIT 2500
+#define TACHO_FAIL_LIMIT 5000
+
 #include <EEPROM.h>
 
 PID *motor_PID;
