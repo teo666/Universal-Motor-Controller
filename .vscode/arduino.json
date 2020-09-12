@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:uno",
+    "sketch": "Universal_Motor_Controller.ino",
+    "port": "/dev/ttyUSB0"
+}
